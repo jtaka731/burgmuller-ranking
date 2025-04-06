@@ -255,7 +255,7 @@ const BurgmullerTierList = () => {
     }
   };
 
-  // 曲の要素を取得する関数（コンパクト版）
+  // 曲の要素を取得する関数（超コンパクト版）
   const getPieceElement = (pieceId) => {
     const piece = burgmullerPieces.find(p => p.id === pieceId);
     const basePath = getBasePath();
@@ -268,27 +268,28 @@ const BurgmullerTierList = () => {
         onDragStart={(e) => handleDragStart(e, pieceId)}
         onDragEnd={handleDragEnd}
         style={{
-          padding: '4px',  // 縮小: 8px → 4px
-          margin: '2px',   // 縮小: 4px → 2px
+          padding: '2px',  // さらに縮小: 4px → 2px
+          margin: '1px',   // さらに縮小: 2px → 1px
           backgroundColor: 'white',
           border: '1px solid #d1d5db',
-          borderRadius: '4px',
+          borderRadius: '3px', // 縮小: 4px → 3px
           cursor: 'move',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          width: '90px'    // 縮小: 100px → 90px
+          width: '70px',   // さらに縮小: 90px → 70px
+          boxShadow: '0 1px 1px rgba(0,0,0,0.05)'
         }}
       >
         <div 
           style={{
-            width: '70px',  // 縮小: 80px → 70px
-            height: '70px', // 縮小: 80px → 70px
+            width: '60px',  // さらに縮小: 70px → 60px
+            height: '60px', // さらに縮小: 70px → 60px
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            borderRadius: '4px',
-            marginBottom: '2px', // 縮小: 4px → 2px
+            borderRadius: '3px', // 縮小: 4px → 3px
+            marginBottom: '1px', // さらに縮小: 2px → 1px
             overflow: 'hidden'
           }}
         >
@@ -303,33 +304,62 @@ const BurgmullerTierList = () => {
               // 親要素のスタイルを変更
               e.target.parentNode.style.backgroundColor = colorMapping[piece.id];
               // 番号を表示
-              e.target.parentNode.innerHTML = `<span style="font-size: 16px; font-weight: bold;">${piece.id}</span>`;
+              e.target.parentNode.innerHTML = `<span style="font-size: 14px; font-weight: bold;">${piece.id}</span>`;
             }}
           />
         </div>
-        <div style={{ fontSize: '10px', textAlign: 'center' }}>{piece.title}</div>
+        <div style={{ 
+          fontSize: '8px', 
+          textAlign: 'center',
+          lineHeight: '1.1',
+          height: '18px', // 固定高さを設定して2行表示できるようにする
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden'
+        }}>
+          {piece.title}
+        </div>
       </div>
     );
   };
 
   return (
-    <div ref={contentRef} style={{ padding: '8px', maxWidth: '1280px', margin: '0 auto' }}> {/* 縮小: 16px → 8px */}
-      <h1 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px', textAlign: 'center' }}> {/* 縮小: 24px → 20px, 16px → 8px */}
+    <div 
+      ref={contentRef} 
+      style={{ 
+        padding: '4px', // さらに縮小: 8px → 4px
+        maxWidth: '1280px', 
+        margin: '0 auto',
+        maxHeight: '100vh', // 画面の高さいっぱいに表示
+        boxSizing: 'border-box' // パディングを含めたサイズ計算
+      }}
+    >
+      <h1 style={{ 
+        fontSize: '18px', // さらに縮小: 20px → 18px
+        fontWeight: 'bold', 
+        marginBottom: '4px', // さらに縮小: 8px → 4px
+        textAlign: 'center',
+        lineHeight: '1.2' // 行間を詰める
+      }}>
         ブルグミュラー25の練習曲 お気に入りランキング
       </h1>
-      <p style={{ marginBottom: '8px', textAlign: 'center', color: '#4b5563' }}> {/* 縮小: 16px → 8px */}
-        各曲をドラッグ＆ドロップして、お気に入りの曲をランク付けしましょう
-      </p>
       
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}> {/* 縮小: 16px → 8px */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        gap: '4px', // さらに縮小: 8px → 4px
+        marginBottom: '4px' // さらに縮小: 8px → 4px
+      }}>
         <button
           onClick={handleReset}
           style={{
-            padding: '6px 12px',  // 縮小: 8px 16px → 6px 12px
+            padding: '4px 8px',  // さらに縮小: 6px 12px → 4px 8px
             backgroundColor: '#6b7280',
             color: 'white',
-            borderRadius: '4px',
-            cursor: 'pointer'
+            borderRadius: '3px', // 縮小: 4px → 3px 
+            cursor: 'pointer',
+            fontSize: '12px' // フォントサイズを小さく
           }}
         >
           リセット
@@ -339,12 +369,13 @@ const BurgmullerTierList = () => {
           onClick={handleDownloadPDF}
           disabled={isGeneratingPDF}
           style={{
-            padding: '6px 12px',  // 縮小: 8px 16px → 6px 12px
+            padding: '4px 8px',  // さらに縮小: 6px 12px → 4px 8px
             backgroundColor: '#3b82f6',
             color: 'white',
-            borderRadius: '4px',
+            borderRadius: '3px', // 縮小: 4px → 3px
             cursor: isGeneratingPDF ? 'not-allowed' : 'pointer',
-            opacity: isGeneratingPDF ? 0.7 : 1
+            opacity: isGeneratingPDF ? 0.7 : 1,
+            fontSize: '12px' // フォントサイズを小さく
           }}
         >
           {isGeneratingPDF ? 'PDF生成中...' : 'PDFダウンロード'}
@@ -352,22 +383,35 @@ const BurgmullerTierList = () => {
       </div>
       
       {/* ティアリスト */}
-      <div id="tiers-list" style={{ marginBottom: '16px' }}> {/* 縮小: 32px → 16px */}
+      <div 
+        id="tiers-list" 
+        style={{ 
+          marginBottom: '8px', // さらに縮小: 16px → 8px
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '2px' // 間隔を詰める
+        }}
+      >
         {tiers.map(tier => (
           <div
             key={tier.id}
             onDrop={(e) => handleDrop(e, tier.id)}
             onDragOver={handleDragOver}
-            style={{ display: 'flex', marginBottom: '4px', border: '1px solid #d1d5db' /* 縮小: 8px → 4px */ }}
+            style={{ 
+              display: 'flex', 
+              marginBottom: '2px', // さらに縮小: 4px → 2px
+              border: '1px solid #d1d5db' 
+            }}
           >
             <div 
               style={{ 
-                width: '40px',  // 縮小: 64px → 40px
+                width: '30px',  // さらに縮小: 40px → 30px
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center', 
                 fontWeight: 'bold',
-                backgroundColor: tier.color
+                backgroundColor: tier.color,
+                fontSize: '16px' // フォントサイズを指定
               }}
             >
               {tier.label}
@@ -375,37 +419,80 @@ const BurgmullerTierList = () => {
             <div 
               style={{ 
                 flex: '1', 
-                minHeight: '90px',  // 縮小: 128px → 90px
-                padding: '4px',     // 縮小: 8px → 4px
+                minHeight: '66px',  // さらに縮小: 90px → 66px
+                maxHeight: '66px',  // 高さを固定して縦スクロールを防ぐ
+                padding: '2px',     // さらに縮小: 4px → 2px
                 backgroundColor: '#f3f4f6', 
                 display: 'flex', 
-                flexWrap: 'wrap' 
+                flexWrap: 'wrap',
+                overflow: 'auto'    // 多数の曲がある場合は横スクロール可能に
               }}
             >
               {tierAssignments[tier.id].map(pieceId => getPieceElement(pieceId))}
+              {tierAssignments[tier.id].length === 0 && (
+                <span style={{ 
+                  color: '#9ca3af', 
+                  padding: '0 4px',
+                  fontSize: '11px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  height: '100%'
+                }}>
+                  曲をここにドラッグ
+                </span>
+              )}
             </div>
           </div>
         ))}
       </div>
       
       {/* 未割り当て曲 */}
-      <div id="unassigned-section" style={{ marginTop: '8px', marginBottom: '16px' }}> {/* 縮小: 16px → 8px, 32px → 16px */}
-        <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>未分類の曲:</div> {/* 縮小: 8px → 4px */}
+      <div id="unassigned-section" style={{ marginTop: '4px', marginBottom: '4px' }}> {/* さらに縮小: 8px → 4px, 16px → 4px */}
+        <div style={{ 
+          fontWeight: 'bold', 
+          marginBottom: '2px', /* さらに縮小: 4px → 2px */
+          fontSize: '12px' /* フォントサイズを小さく */
+        }}>
+          未分類の曲:
+        </div>
         <div
           onDrop={(e) => handleDrop(e, 'unassigned')}
           onDragOver={handleDragOver}
           style={{ 
-            padding: '8px',   // 縮小: 16px → 8px
+            padding: '4px',   // さらに縮小: 8px → 4px
             border: '1px solid #d1d5db', 
             backgroundColor: '#f3f4f6', 
             display: 'flex', 
             flexWrap: 'wrap',
-            maxHeight: '240px', // 縮小: 400px → 240px
+            gap: '1px', // 項目間の隙間を小さく
+            maxHeight: '80px', // さらに縮小: 240px → 80px
             overflowY: 'auto'
           }}
         >
           {tierAssignments.unassigned.map(pieceId => getPieceElement(pieceId))}
+          {tierAssignments.unassigned.length === 0 && (
+            <span style={{ 
+              color: '#9ca3af', 
+              padding: '0 4px',
+              fontSize: '11px',
+              display: 'flex',
+              alignItems: 'center',
+              height: '100%'
+            }}>
+              すべての曲が分類されています
+            </span>
+          )}
         </div>
+      </div>
+      
+      {/* クレジット表示をさらにコンパクトに */}
+      <div style={{ 
+        fontSize: '9px', 
+        color: '#9ca3af', 
+        textAlign: 'center',
+        marginTop: '2px'
+      }}>
+        ブルグミュラー25練習曲ランキング | &copy; {new Date().getFullYear()}
       </div>
     </div>
   );
