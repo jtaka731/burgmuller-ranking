@@ -533,25 +533,25 @@ const BurgmullerTierList = () => {
     }
   };
 
-  // 画面サイズに応じたティア高さ
+  // 画面サイズに応じたティア高さ (曲名が見切れないよう+10px増加)
   const getTierHeight = () => {
     if (isUnassignedEmpty) {
-      return getSizeBasedStyle(55, 75, 95); // 未分類が空の場合
+      return getSizeBasedStyle(65, 85, 105); // 未分類が空の場合
     } else {
-      return getSizeBasedStyle(48, 65, 85); // 未分類がある場合
+      return getSizeBasedStyle(58, 75, 95); // 未分類がある場合
     }
   };
 
-  // 画面サイズに応じた未分類エリアの高さ
+  // 画面サイズに応じた未分類エリアの高さ (曲名が見切れないよう+10px増加)
   const getUnassignedHeight = () => {
     if (isUnassignedEmpty) {
-      return getSizeBasedStyle(25, 30, 35); // 未分類が空の場合（常に小さめ）
+      return getSizeBasedStyle(35, 40, 45); // 未分類が空の場合（常に小さめ）
     } else {
-      return getSizeBasedStyle(55, 70, 85); // 未分類がある場合
+      return getSizeBasedStyle(65, 80, 95); // 未分類がある場合
     }
   };
 
-  // 画面サイズに応じたフォントサイズ
+  // 画面サイズに応じたフォントサイズ (そのまま)
   const getFontSize = () => {
     if (isUnassignedEmpty) {
       return getSizeBasedStyle(8, 10, 12); // 未分類が空の場合
@@ -560,12 +560,12 @@ const BurgmullerTierList = () => {
     }
   };
 
-  // 曲名表示エリアの高さ
+  // 曲名表示エリアの高さ (曲名が見切れないよう+6px増加)
   const getTitleHeight = () => {
     if (isUnassignedEmpty) {
-      return getSizeBasedStyle(10, 16, 22); // 未分類が空の場合（縦方向縮小）
+      return getSizeBasedStyle(16, 22, 28); // 未分類が空の場合
     } else {
-      return getSizeBasedStyle(9, 14, 18); // 未分類がある場合（縦方向縮小）
+      return getSizeBasedStyle(15, 20, 24); // 未分類がある場合
     }
   };
 
@@ -593,7 +593,7 @@ const BurgmullerTierList = () => {
     return title;
   };
 
-// 曲の要素を取得する関数（1行表示+ツールチップ対応版）
+// 曲の要素を取得する関数（曲名が見切れないように修正）
 const getPieceElement = (pieceId) => {
   const piece = burgmullerPieces.find(p => p.id === pieceId);
   const basePath = getBasePath();
@@ -611,7 +611,7 @@ const getPieceElement = (pieceId) => {
       onDragStart={(e) => handleDragStart(e, pieceId)}
       onDragEnd={handleDragEnd}
       style={{
-        padding: '1px 1px 0px 1px', // 上下のパディングを最小化
+        padding: '1px 1px 2px 1px', // 下部パディングを少し増やす
         margin: '1px',
         backgroundColor: 'white',
         border: '1px solid #d1d5db',
@@ -635,7 +635,7 @@ const getPieceElement = (pieceId) => {
           alignItems: 'center',
           justifyContent: 'center',
           borderRadius: '2px', // 角丸を小さく
-          marginBottom: '0px', // 下部マージンを削除
+          marginBottom: '2px', // 下部マージンを少し追加
           overflow: 'hidden',
           transition: 'all 0.3s ease'
         }}
@@ -658,19 +658,20 @@ const getPieceElement = (pieceId) => {
       <div style={{ 
         fontSize: `${fontSize}px`,
         textAlign: 'center',
-        lineHeight: '1', // 行間を詰める
+        lineHeight: '1.2', // 行間を少し広げる
         height: `${titleHeight}px`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         width: '100%',
-        overflow: 'hidden',
-        padding: '1px 0 0 0', // 上部のみパディング
+        overflow: 'visible', // 見切れないようにオーバーフローを許可
+        padding: '2px 0', // 上下パディングを追加
         transition: 'all 0.3s ease',
-        whiteSpace: 'nowrap', // 改行しない
-        textOverflow: 'ellipsis', // 長いテキストは省略記号で省略
+        whiteSpace: 'normal', // 必要に応じて改行を許可
+        textOverflow: 'clip', // 省略せずにすべて表示
+        wordBreak: 'break-word' // 長い単語は途中で折り返す
       }}>
-        {piece.id < 10 ? piece.title : getTruncatedTitle(piece.title)}
+        {piece.title} {/* 省略せずに全体を表示 */}
       </div>
     </div>
   );
@@ -837,7 +838,7 @@ return (
               flex: '1', 
               minHeight: `${getTierHeight()}px`,
               maxHeight: `${getTierHeight()}px`,
-              padding: '1px', // パディングを最小に
+              padding: '2px', // パディングを少し増やす
               backgroundColor: '#f3f4f6', 
               display: 'flex', 
               flexWrap: 'wrap',
@@ -897,7 +898,7 @@ return (
         onDrop={(e) => handleDrop(e, 'unassigned')}
         onDragOver={handleDragOver}
         style={{ 
-          padding: '2px', // パディングを最小に
+          padding: '2px', // パディングを増やす
           border: '1px solid #d1d5db', 
           backgroundColor: '#f3f4f6', 
           display: 'flex', 
