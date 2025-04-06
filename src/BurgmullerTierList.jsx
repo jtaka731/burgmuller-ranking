@@ -597,14 +597,14 @@ useEffect(() => {
     }
   };
 
-  // 画面サイズに応じたティア高さ (曲名が見切れないよう+10px増加)
-  const getTierHeight = () => {
-    if (isUnassignedEmpty) {
-      return getSizeBasedStyle(65, 85, 105); // 未分類が空の場合
-    } else {
-      return getSizeBasedStyle(58, 75, 95); // 未分類がある場合
-    }
-  };
+// 画面サイズに応じたティア高さ (曲名が見切れないよう修正)
+const getTierHeight = () => {
+  if (isUnassignedEmpty) {
+    return getSizeBasedStyle(85, 105, 125); // 未分類が空の場合、高さを増加
+  } else {
+    return getSizeBasedStyle(78, 95, 115); // 未分類がある場合、高さを増加
+  }
+};
 
   // 画面サイズに応じた未分類エリアの高さ (曲名が見切れないよう+10px増加)
   const getUnassignedHeight = () => {
@@ -624,14 +624,14 @@ useEffect(() => {
     }
   };
 
-  // 曲名表示エリアの高さ (曲名が見切れないよう+6px増加)
-  const getTitleHeight = () => {
-    if (isUnassignedEmpty) {
-      return getSizeBasedStyle(16, 22, 28); // 未分類が空の場合
-    } else {
-      return getSizeBasedStyle(15, 20, 24); // 未分類がある場合
-    }
-  };
+// 曲名表示エリアの高さ (より高く調整)
+const getTitleHeight = () => {
+  if (isUnassignedEmpty) {
+    return getSizeBasedStyle(32, 38, 44); // 未分類が空の場合、高さを増加
+  } else {
+    return getSizeBasedStyle(30, 36, 40); // 未分類がある場合、高さを増加
+  }
+};
 
   // コンテナの最大幅の設定（画面サイズに応じて）
   const getContainerMaxWidth = () => {
