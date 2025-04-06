@@ -1,19 +1,19 @@
 {
   "files": {
     "main.css": "/burgmuller-ranking/static/css/main.042cc223.css",
-    "main.js": "/burgmuller-ranking/static/js/main.a9e67eaf.js",
+    "main.js": "/burgmuller-ranking/static/js/main.1aea3670.js",
     "static/js/977.53e32100.chunk.js": "/burgmuller-ranking/static/js/977.53e32100.chunk.js",
     "static/js/732.245e51b1.chunk.js": "/burgmuller-ranking/static/js/732.245e51b1.chunk.js",
     "static/js/453.6b645971.chunk.js": "/burgmuller-ranking/static/js/453.6b645971.chunk.js",
     "index.html": "/burgmuller-ranking/index.html",
     "main.042cc223.css.map": "/burgmuller-ranking/static/css/main.042cc223.css.map",
-    "main.a9e67eaf.js.map": "/burgmuller-ranking/static/js/main.a9e67eaf.js.map",
+    "main.1aea3670.js.map": "/burgmuller-ranking/static/js/main.1aea3670.js.map",
     "977.53e32100.chunk.js.map": "/burgmuller-ranking/static/js/977.53e32100.chunk.js.map",
     "732.245e51b1.chunk.js.map": "/burgmuller-ranking/static/js/732.245e51b1.chunk.js.map",
     "453.6b645971.chunk.js.map": "/burgmuller-ranking/static/js/453.6b645971.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.042cc223.css",
-    "static/js/main.a9e67eaf.js"
+    "static/js/main.1aea3670.js"
   ]
 }
