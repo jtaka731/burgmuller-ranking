@@ -264,7 +264,6 @@ const BurgmullerTierList = () => {
     };
   }, [draggedPiece]);
   
-  // 修正された ドラッグ開始時の処理
   const handleDragStart = (e, pieceId) => {
     setDraggedPiece(pieceId);
     setDragStartX(e.clientX);
@@ -278,11 +277,18 @@ const BurgmullerTierList = () => {
     e.dataTransfer.setData('text/plain', pieceId);
     e.dataTransfer.effectAllowed = 'move';
     
-    // ドラッグ画像の設定を変更
-    // 透明の1x1ピクセル画像を使用して、デフォルトのドラッグプレビューを非表示にする
-    const emptyImg = document.createElement('img');
+    // ブラウザのデフォルトドラッグイメージを完全に無効化する方法
+    // 1px x 1pxの透明画像を使用
+    const emptyImg = new Image();
     emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-    e.dataTransfer.setDragImage(emptyImg, 0, 0);
+    // 重要: ビジュアルが準備できていることを確認
+    emptyImg.onload = () => {
+      e.dataTransfer.setDragImage(emptyImg, 0, 0);
+    };
+    // すでに読み込まれているかもしれない場合の対応
+    if (emptyImg.complete) {
+      e.dataTransfer.setDragImage(emptyImg, 0, 0);
+    }
   };
 
   // ドラッグ終了時の処理
@@ -291,7 +297,7 @@ const BurgmullerTierList = () => {
     setDragStartX(null);
     setDragDirection(null);
     
-    // ドラッグビジュアル用のステートをリセット
+    // 即座にドラッグビジュアルを非表示に
     setIsDragging(false);
     
     // 自動スクロールを停止
@@ -885,44 +891,42 @@ const BurgmullerTierList = () => {
         boxShadow: '0 0 10px rgba(0,0,0,0.1)' // 影を追加
       }}
     >
-      {/* カスタムドラッグビジュアル - ドラッグ中のみ表示 */}
-      {isDragging && draggedPiece && (
-        <div
-          style={{
-            position: 'fixed',
-            left: dragVisualPosition.x - 40,
-            top: dragVisualPosition.y - 40,
-            width: '80px',
-            height: '80px',
-            pointerEvents: 'none', // マウスイベントを通過させる
-            zIndex: 9999,
-            opacity: 0.8,
-            backgroundColor: 'white',
-            border: '1px solid #d1d5db',
-            borderRadius: '4px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-          }}
-        >
-          <div 
-            style={{
-              width: '60px',
-              height: '60px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: colorMapping[draggedPiece] || '#f3f4f6'
-            }}
-          >
-            <span style={{ fontWeight: 'bold' }}>{draggedPiece}</span>
-          </div>
-          <div style={{ fontSize: '10px', marginTop: '2px' }}>
-            {burgmullerPieces.find(p => p.id === draggedPiece)?.title.substring(0, 10)}
-          </div>
-        </div>
-      )}
+{/* カスタムドラッグビジュアル - ドラッグ中のみ表示 */}
+{isDragging && draggedPiece && (
+  <div
+    style={{
+      position: 'fixed',
+      left: dragVisualPosition.x - 40,
+      top: dragVisualPosition.y - 40,
+      width: '80px',
+      height: '80px',
+      pointerEvents: 'none', // マウスイベントを通過させる
+      zIndex: 9999,
+      opacity: 0.8,
+      backgroundColor: 'white',
+      border: '2px solid #3b82f6', // より目立つ青色のボーダー
+      borderRadius: '4px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+    }}
+  >
+    <div 
+      style={{
+        width: '60px',
+        height: '60px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colorMapping[draggedPiece] || '#f3f4f6',
+        margin: '4px'
+      }}
+    >
+      <span style={{ fontWeight: 'bold', fontSize: '18px' }}>{draggedPiece}</span>
+    </div>
+  </div>
+)}
       
  {/* 現在再生中の曲に関する情報表示 */}
  {currentlyPlaying && (
