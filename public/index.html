@@ -42,6 +42,23 @@
         z-index: 1;
       }
     </style>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // ズーム防止
+        document.addEventListener('wheel', function(e) {
+          if(e.ctrlKey) {
+            e.preventDefault();
+          }
+        }, { passive: false });
+        
+        // タッチデバイスでのピンチズーム防止
+        document.addEventListener('touchmove', function(e) {
+          if(e.touches.length > 1) {
+            e.preventDefault();
+          }
+        }, { passive: false });
+      });
+    </script>
   </head>
   <body style="background-attachment: fixed; background-size: cover; background-repeat: no-repeat; overflow-x: hidden; position: relative;">
     <noscript>You need to enable JavaScript to run this app.</noscript>
