@@ -597,12 +597,12 @@ useEffect(() => {
     }
   };
 
-// 画面サイズに応じたティア高さ (曲名が見切れないよう修正)
+// 2. ティアの高さを調整（元のサイズより少し大きく、ただし見切れを防ぐ程度に）
 const getTierHeight = () => {
   if (isUnassignedEmpty) {
-    return getSizeBasedStyle(85, 105, 125); // 未分類が空の場合、高さを増加
+    return getSizeBasedStyle(70, 90, 110); // 未分類が空の場合
   } else {
-    return getSizeBasedStyle(78, 95, 115); // 未分類がある場合、高さを増加
+    return getSizeBasedStyle(65, 85, 105); // 未分類がある場合
   }
 };
 
@@ -624,12 +624,12 @@ const getTierHeight = () => {
     }
   };
 
-// 曲名表示エリアの高さ (より高く調整)
+// 3. 曲名表示エリアの高さを調整
 const getTitleHeight = () => {
   if (isUnassignedEmpty) {
-    return getSizeBasedStyle(32, 38, 44); // 未分類が空の場合、高さを増加
+    return getSizeBasedStyle(24, 26, 28); // 未分類が空の場合
   } else {
-    return getSizeBasedStyle(30, 36, 40); // 未分類がある場合、高さを増加
+    return getSizeBasedStyle(22, 24, 26); // 未分類がある場合
   }
 };
 
@@ -754,24 +754,24 @@ return (
       />
     </div>
     <div style={{ 
-      fontSize: `${fontSize}px`,
-      textAlign: 'center',
-      lineHeight: '1.2', // 行間を少し広げる
-      height: `${titleHeight}px`,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: '100%',
-      overflow: 'visible', // 見切れないようにオーバーフローを許可
-      padding: '2px 0', // 上下パディングを追加
-      transition: 'all 0.3s ease',
-      whiteSpace: 'normal', // 必要に応じて改行を許可
-      textOverflow: 'clip', // 省略せずにすべて表示
-      wordBreak: 'break-word', // 長い単語は途中で折り返す
-      fontWeight: isPlaying ? 'bold' : 'normal' // 再生中は太字
-    }}>
-      {piece.title} {/* 省略せずに全体を表示 */}
-    </div>
+  fontSize: `${fontSize}px`,
+  textAlign: 'center',
+  lineHeight: '1.25', // より自然なライン高さ
+  height: `${titleHeight}px`,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '100%',
+  overflow: 'visible',
+  padding: '1px 1px', // パディングを最小化
+  transition: 'all 0.3s ease',
+  whiteSpace: 'normal',
+  textOverflow: 'clip',
+  wordBreak: 'break-word',
+  fontWeight: isPlaying ? 'bold' : 'normal'
+}}>
+  {piece.title}
+</div>
   </div>
 );
 };
@@ -927,28 +927,6 @@ return (
       {submitResult.message}
     </div>
   )}
-  
-  {/* 曲をダブルクリックで再生できる説明 */}
-  <div style={{ 
-    padding: '4px 8px', 
-    marginBottom: '8px', 
-    backgroundColor: '#f0f9ff',
-    borderRadius: '2px',
-    fontSize: getSizeBasedStyle(10, 11, 12),
-    color: '#0369a1',
-    border: '1px solid #e0f2fe'
-  }}>
-    <div style={{ display: 'flex', alignItems: 'center' }}>
-      <div style={{ 
-        width: '10px', 
-        height: '10px', 
-        borderRadius: '50%', 
-        backgroundColor: '#0ea5e9',
-        marginRight: '6px'
-      }}></div>
-      曲のカードをダブルクリックするとサンプル音源を再生できます
-    </div>
-  </div>
   
   {/* ティアリスト */}
   <div 
