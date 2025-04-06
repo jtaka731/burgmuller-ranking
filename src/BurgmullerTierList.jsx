@@ -21,23 +21,23 @@ const BurgmullerTierList = () => {
     { id: 4, title: '4. 小さな集会' },
     { id: 5, title: '5. 無邪気' },
     { id: 6, title: '6. 進歩' },
-    { id: 7, title: '7. 清らかな小川' },
+    { id: 7, title: '7. 清らかな流れ' },
     { id: 8, title: '8. 優美' },
-    { id: 9, title: '9. 狩' },
+    { id: 9, title: '9. 狩り' },
     { id: 10, title: '10. やさしい花' },
     { id: 11, title: '11. せきれい' },
     { id: 12, title: '12. 別れ' },
     { id: 13, title: '13. なぐさめ' },
-    { id: 14, title: '14. スティリアの女' },
+    { id: 14, title: '14. スティリエンヌ' },
     { id: 15, title: '15. バラード' },
-    { id: 16, title: '16. 小さな嘆き' },
+    { id: 16, title: '16. あまいなげき' },
     { id: 17, title: '17. おしゃべり' },
-    { id: 18, title: '18. 心配' },
+    { id: 18, title: '18. 気がかり' },
     { id: 19, title: '19. アヴェ・マリア' },
     { id: 20, title: '20. タランテラ' },
-    { id: 21, title: '21. 天使の声' },
+    { id: 21, title: '21. 天使のハーモニー' },
     { id: 22, title: '22. 舟歌' },
-    { id: 23, title: '23. 帰途' },
+    { id: 23, title: '23. 帰り道' },
     { id: 24, title: '24. つばめ' },
     { id: 25, title: '25. 貴婦人の乗馬' }
   ];
@@ -69,6 +69,12 @@ const BurgmullerTierList = () => {
   const [dragStartX, setDragStartX] = useState(null); // ドラッグ開始のX座標を記録
   const [dragDirection, setDragDirection] = useState(null); // ドラッグの方向（左/右）を記録
   const [screenSize, setScreenSize] = useState('small'); // 画面サイズの状態
+  
+  // 自動スクロール機能のステート
+  const [autoScrollActive, setAutoScrollActive] = useState(false);
+  const [scrollDirection, setScrollDirection] = useState(null);
+  const autoScrollRef = useRef(null);
+  const scrollSpeed = 10; // スクロール速度 (px/フレーム)
   
   // ティア要素への参照を保存
   const tierRefs = useRef({});
@@ -185,6 +191,65 @@ useEffect(() => {
       window.removeEventListener('mousemove', handleMouseMove);
     };
   }, [draggedPiece, dragStartX]);
+
+  // ドラッグ中のマウス位置に応じたスクロール処理
+  useEffect(() => {
+    // ドラッグ中のマウス移動を監視
+    const handleMouseMoveForScroll = (e) => {
+      if (draggedPiece === null) return;
+      
+      const scrollThreshold = 100; // 画面端からの距離 (px)
+      const windowHeight = window.innerHeight;
+      const mouseY = e.clientY;
+      
+      // 画面上部に近い場合は上方向にスクロール
+      if (mouseY < scrollThreshold) {
+        setScrollDirection('up');
+        setAutoScrollActive(true);
+      } 
+      // 画面下部に近い場合は下方向にスクロール
+      else if (mouseY > windowHeight - scrollThreshold) {
+        setScrollDirection('down');
+        setAutoScrollActive(true);
+      } 
+      // どちらでもない場合はスクロール停止
+      else {
+        setAutoScrollActive(false);
+        setScrollDirection(null);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMoveForScroll);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMoveForScroll);
+    };
+  }, [draggedPiece]);
+
+  // 自動スクロールの実行
+  useEffect(() => {
+    const performAutoScroll = () => {
+      if (autoScrollActive && scrollDirection) {
+        const scrollAmount = scrollDirection === 'up' ? -scrollSpeed : scrollSpeed;
+        window.scrollBy(0, scrollAmount);
+        autoScrollRef.current = requestAnimationFrame(performAutoScroll);
+      }
+    };
+    
+    if (autoScrollActive && scrollDirection) {
+      autoScrollRef.current = requestAnimationFrame(performAutoScroll);
+    } else if (autoScrollRef.current) {
+      cancelAnimationFrame(autoScrollRef.current);
+      autoScrollRef.current = null;
+    }
+    
+    return () => {
+      if (autoScrollRef.current) {
+        cancelAnimationFrame(autoScrollRef.current);
+        autoScrollRef.current = null;
+      }
+    };
+  }, [autoScrollActive, scrollDirection]);
   
   // ドラッグ開始時の処理
   const handleDragStart = (e, pieceId) => {
@@ -201,6 +266,9 @@ useEffect(() => {
     setDraggedPiece(null);
     setDragStartX(null);
     setDragDirection(null);
+    // 自動スクロールを停止
+    setAutoScrollActive(false);
+    setScrollDirection(null);
   };
 
   // ドラッグオーバー時のデフォルト動作を防止
@@ -588,16 +656,16 @@ useEffect(() => {
     }
   };
 
-  // 画面サイズに応じた画像サイズ
-  const getImageSize = () => {
-    if (isUnassignedEmpty) {
-      return getSizeBasedStyle(45, 65, 85); // 未分類が空の場合
-    } else {
-      return getSizeBasedStyle(40, 60, 75); // 未分類がある場合
-    }
-  };
+// 画面サイズに応じた画像サイズ
+const getImageSize = () => {
+  if (isUnassignedEmpty) {
+    return getSizeBasedStyle(45, 65, 85); // 未分類が空の場合
+  } else {
+    return getSizeBasedStyle(40, 60, 75); // 未分類がある場合
+  }
+};
 
-// 2. ティアの高さを調整（元のサイズより少し大きく、ただし見切れを防ぐ程度に）
+// 画面サイズに応じたティア高さ（元のサイズより少し大きく、ただし見切れを防ぐ程度に）
 const getTierHeight = () => {
   if (isUnassignedEmpty) {
     return getSizeBasedStyle(70, 90, 110); // 未分類が空の場合
@@ -606,25 +674,25 @@ const getTierHeight = () => {
   }
 };
 
-  // 画面サイズに応じた未分類エリアの高さ (曲名が見切れないよう+10px増加)
-  const getUnassignedHeight = () => {
-    if (isUnassignedEmpty) {
-      return getSizeBasedStyle(35, 40, 45); // 未分類が空の場合（常に小さめ）
-    } else {
-      return getSizeBasedStyle(65, 80, 95); // 未分類がある場合
-    }
-  };
+// 画面サイズに応じた未分類エリアの高さ (曲名が見切れないよう+10px増加)
+const getUnassignedHeight = () => {
+  if (isUnassignedEmpty) {
+    return getSizeBasedStyle(35, 40, 45); // 未分類が空の場合（常に小さめ）
+  } else {
+    return getSizeBasedStyle(65, 80, 95); // 未分類がある場合
+  }
+};
 
-  // 画面サイズに応じたフォントサイズ (そのまま)
-  const getFontSize = () => {
-    if (isUnassignedEmpty) {
-      return getSizeBasedStyle(8, 10, 12); // 未分類が空の場合
-    } else {
-      return getSizeBasedStyle(7, 9, 11); // 未分類がある場合
-    }
-  };
+// 画面サイズに応じたフォントサイズ (そのまま)
+const getFontSize = () => {
+  if (isUnassignedEmpty) {
+    return getSizeBasedStyle(8, 10, 12); // 未分類が空の場合
+  } else {
+    return getSizeBasedStyle(7, 9, 11); // 未分類がある場合
+  }
+};
 
-// 3. 曲名表示エリアの高さを調整
+// 曲名表示エリアの高さを調整
 const getTitleHeight = () => {
   if (isUnassignedEmpty) {
     return getSizeBasedStyle(24, 26, 28); // 未分類が空の場合
@@ -633,28 +701,28 @@ const getTitleHeight = () => {
   }
 };
 
-  // コンテナの最大幅の設定（画面サイズに応じて）
-  const getContainerMaxWidth = () => {
-    return getSizeBasedStyle(1200, 1440, '80%'); // ノートPCでは1200pxに縮小
-  };
+// コンテナの最大幅の設定（画面サイズに応じて）
+const getContainerMaxWidth = () => {
+  return getSizeBasedStyle(1200, 1440, '80%'); // ノートPCでは1200pxに縮小
+};
 
-  // 画面全体の余白
-  const getBodyPadding = () => {
-    return getSizeBasedStyle(1, 4, 8); // ノートPCでは余白を最小限に
-  };
+// 画面全体の余白
+const getBodyPadding = () => {
+  return getSizeBasedStyle(1, 4, 8); // ノートPCでは余白を最小限に
+};
 
- // 曲名を省略表示する関数
- const getTruncatedTitle = (title) => {
-  // 曲番号と曲名を分ける
-  const match = title.match(/^(\d+\.\s)(.+)$/);
-  if (match) {
-    const [, number, name] = match;
-    // 曲名が一定の長さを超えたら省略
-    if (name.length > 8) {
-      return `${number}${name.substring(0, 7)}..`;
-    }
+// 曲名を省略表示する関数
+const getTruncatedTitle = (title) => {
+// 曲番号と曲名を分ける
+const match = title.match(/^(\d+\.\s)(.+)$/);
+if (match) {
+  const [, number, name] = match;
+  // 曲名が一定の長さを超えたら省略
+  if (name.length > 8) {
+    return `${number}${name.substring(0, 7)}..`;
   }
-  return title;
+}
+return title;
 };
 
 // 曲の要素を取得する関数（ダブルクリックで音声再生機能追加）
@@ -671,433 +739,433 @@ const titleHeight = getTitleHeight();
 const isPlaying = currentlyPlaying === pieceId;
 
 return (
-  <div
-    key={pieceId}
-    data-piece-id={pieceId}
-    draggable
-    onDragStart={(e) => handleDragStart(e, pieceId)}
-    onDragEnd={handleDragEnd}
-    onDoubleClick={() => handlePlayAudio(pieceId)} // ダブルクリックで音声再生
-    style={{
-      padding: '1px 1px 2px 1px', // 下部パディングを少し増やす
-      margin: '1px',
-      backgroundColor: isPlaying ? '#ecfdf5' : 'white', // 再生中は背景色を変える
-      border: isPlaying ? '1px solid #10b981' : '1px solid #d1d5db', // 再生中は枠線の色を変える
-      borderRadius: '2px', // 角丸を小さく
-      cursor: 'move',
+<div
+  key={pieceId}
+  data-piece-id={pieceId}
+  draggable
+  onDragStart={(e) => handleDragStart(e, pieceId)}
+  onDragEnd={handleDragEnd}
+  onDoubleClick={() => handlePlayAudio(pieceId)} // ダブルクリックで音声再生
+  style={{
+    padding: '1px 1px 2px 1px', // 下部パディングを少し増やす
+    margin: '1px',
+    backgroundColor: isPlaying ? '#ecfdf5' : 'white', // 再生中は背景色を変える
+    border: isPlaying ? '1px solid #10b981' : '1px solid #d1d5db', // 再生中は枠線の色を変える
+    borderRadius: '2px', // 角丸を小さく
+    cursor: 'move',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    width: `${pieceWidth}px`,
+    height: 'auto', // 高さを内容に合わせる
+    boxShadow: isPlaying ? '0 0 3px #10b981' : 'none', // 再生中は軽いシャドウ
+    transition: 'all 0.3s ease',
+    position: 'relative' // 再生アイコン用
+  }}
+  title={`${piece.title} (ダブルクリックで${isPlaying ? '停止' : '再生'})` } // ツールチップに再生情報追加
+>
+  {/* 再生状態表示アイコン */}
+  {isPlaying && (
+    <div style={{
+      position: 'absolute',
+      top: '3px',
+      right: '3px',
+      backgroundColor: '#10b981',
+      borderRadius: '50%',
+      width: '12px',
+      height: '12px',
       display: 'flex',
-      flexDirection: 'column',
       alignItems: 'center',
-      width: `${pieceWidth}px`,
-      height: 'auto', // 高さを内容に合わせる
-      boxShadow: isPlaying ? '0 0 3px #10b981' : 'none', // 再生中は軽いシャドウ
-      transition: 'all 0.3s ease',
-      position: 'relative' // 再生アイコン用
-    }}
-    title={`${piece.title} (ダブルクリックで${isPlaying ? '停止' : '再生'})` } // ツールチップに再生情報追加
-  >
-    {/* 再生状態表示アイコン */}
-    {isPlaying && (
+      justifyContent: 'center',
+      zIndex: 2
+    }}>
       <div style={{
-        position: 'absolute',
-        top: '3px',
-        right: '3px',
-        backgroundColor: '#10b981',
-        borderRadius: '50%',
-        width: '12px',
-        height: '12px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 2
-      }}>
-        <div style={{
-          width: '4px',
-          height: '4px',
-          backgroundColor: 'white',
-          borderRadius: '50%'
-        }}></div>
-      </div>
-    )}
-    
-    <div 
-      style={{
-        width: `${imageSize}px`,
-        height: `${imageSize}px`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: '2px', // 角丸を小さく
-        marginBottom: '2px', // 下部マージンを少し追加
-        overflow: 'hidden',
-        transition: 'all 0.3s ease'
-      }}
-    >
-      <img 
-        src={`${basePath}/images/piece${piece.id}.jpg`} 
-        alt={piece.title}
-        style={{ 
-          width: '100%', 
-          height: '100%', 
-          objectFit: 'cover',
-          filter: isPlaying ? 'brightness(1.1)' : 'none' // 再生中は少し明るく
-        }}
-        onError={(e) => {
-          // 画像読み込みエラー時の代替表示
-          e.target.onerror = null;
-          e.target.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
-          // 親要素のスタイルを変更
-          e.target.parentNode.style.backgroundColor = colorMapping[piece.id];
-          // 番号を表示
-          e.target.parentNode.innerHTML = `<span style="font-size: ${fontSize + 3}px; font-weight: bold;">${piece.id}</span>`;
-        }}
-      />
+        width: '4px',
+        height: '4px',
+        backgroundColor: 'white',
+        borderRadius: '50%'
+      }}></div>
     </div>
-    <div style={{ 
-  fontSize: `${fontSize}px`,
-  textAlign: 'center',
-  lineHeight: '1.25', // より自然なライン高さ
-  height: `${titleHeight}px`,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: '100%',
-  overflow: 'visible',
-  padding: '1px 1px', // パディングを最小化
-  transition: 'all 0.3s ease',
-  whiteSpace: 'normal',
-  textOverflow: 'clip',
-  wordBreak: 'break-word',
-  fontWeight: isPlaying ? 'bold' : 'normal'
-}}>
-  {piece.title}
-</div>
+  )}
+  
+  <div 
+    style={{
+      width: `${imageSize}px`,
+      height: `${imageSize}px`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: '2px', // 角丸を小さく
+      marginBottom: '2px', // 下部マージンを少し追加
+      overflow: 'hidden',
+      transition: 'all 0.3s ease'
+    }}
+  >
+    <img 
+      src={`${basePath}/images/piece${piece.id}.jpg`} 
+      alt={piece.title}
+      style={{ 
+        width: '100%', 
+        height: '100%', 
+        objectFit: 'cover',
+        filter: isPlaying ? 'brightness(1.1)' : 'none' // 再生中は少し明るく
+      }}
+      onError={(e) => {
+        // 画像読み込みエラー時の代替表示
+        e.target.onerror = null;
+        e.target.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+        // 親要素のスタイルを変更
+        e.target.parentNode.style.backgroundColor = colorMapping[piece.id];
+        // 番号を表示
+        e.target.parentNode.innerHTML = `<span style="font-size: ${fontSize + 3}px; font-weight: bold;">${piece.id}</span>`;
+      }}
+    />
   </div>
+  <div style={{ 
+    fontSize: `${fontSize}px`,
+    textAlign: 'center',
+    lineHeight: '1.25', // より自然なライン高さ
+    height: `${titleHeight}px`,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    overflow: 'visible',
+    padding: '1px 1px', // パディングを最小化
+    transition: 'all 0.3s ease',
+    whiteSpace: 'normal',
+    textOverflow: 'clip',
+    wordBreak: 'break-word',
+    fontWeight: isPlaying ? 'bold' : 'normal'
+  }}>
+    {piece.title}
+  </div>
+</div>
 );
 };
 
 return (
 <div 
-  ref={(el) => { 
-    contentRef.current = el;
-    containerRef.current = el;
-  }} 
-  style={{ 
-    padding: getBodyPadding(),
-    maxWidth: getContainerMaxWidth(),
-    margin: '0 auto',
-    maxHeight: '100vh', 
-    boxSizing: 'border-box',
-    transition: 'all 0.3s ease'
-  }}
+ref={(el) => { 
+  contentRef.current = el;
+  containerRef.current = el;
+}} 
+style={{ 
+  padding: getBodyPadding(),
+  maxWidth: getContainerMaxWidth(),
+  margin: '0 auto',
+  maxHeight: '100vh', 
+  boxSizing: 'border-box',
+  transition: 'all 0.3s ease'
+}}
 >
-  {/* 現在再生中の曲に関する情報表示 */}
-  {currentlyPlaying && (
-    <div style={{
-      position: 'fixed',
-      bottom: '20px',
-      right: '20px',
-      backgroundColor: '#10b981',
-      color: 'white',
-      padding: '6px 12px',
-      borderRadius: '4px',
-      boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-      zIndex: 1000,
-      fontSize: '12px'
-    }}>
-      <div>再生中: {burgmullerPieces.find(p => p.id === currentlyPlaying)?.title}</div>
-      <div style={{ marginTop: '3px', display: 'flex', justifyContent: 'flex-end' }}>
-        <button
-          onClick={() => setCurrentlyPlaying(null)}
-          style={{
-            backgroundColor: 'white',
-            color: '#10b981',
-            border: 'none',
-            padding: '2px 6px',
-            borderRadius: '2px',
-            fontSize: '10px',
-            cursor: 'pointer'
-          }}
-        >
-          停止
-        </button>
-      </div>
-    </div>
-  )}
-
-  {/* ヘッダー部分 - タイトルとボタンを横並びに */}
+{/* 現在再生中の曲に関する情報表示 */}
+{currentlyPlaying && (
   <div style={{
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: getSizeBasedStyle(1, 2, 4), // マージンを最小限に
+    position: 'fixed',
+    bottom: '20px',
+    right: '20px',
+    backgroundColor: '#10b981',
+    color: 'white',
+    padding: '6px 12px',
+    borderRadius: '4px',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+    zIndex: 1000,
+    fontSize: '12px'
+  }}>
+    <div>再生中: {burgmullerPieces.find(p => p.id === currentlyPlaying)?.title}</div>
+    <div style={{ marginTop: '3px', display: 'flex', justifyContent: 'flex-end' }}>
+      <button
+        onClick={() => setCurrentlyPlaying(null)}
+        style={{
+          backgroundColor: 'white',
+          color: '#10b981',
+          border: 'none',
+          padding: '2px 6px',
+          borderRadius: '2px',
+          fontSize: '10px',
+          cursor: 'pointer'
+        }}
+      >
+        停止
+      </button>
+    </div>
+  </div>
+)}
+
+{/* ヘッダー部分 - タイトルとボタンを横並びに */}
+<div style={{
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  marginBottom: getSizeBasedStyle(1, 2, 4), // マージンを最小限に
+  transition: 'all 0.3s ease'
+}}>
+  <h1 style={{ 
+    fontSize: getSizeBasedStyle(15, 18, 22), // フォントサイズを最適化
+    fontWeight: 'bold', 
+    margin: '0',
+    lineHeight: '1.1', // 行間を詰める
     transition: 'all 0.3s ease'
   }}>
-    <h1 style={{ 
-      fontSize: getSizeBasedStyle(15, 18, 22), // フォントサイズを最適化
-      fontWeight: 'bold', 
-      margin: '0',
-      lineHeight: '1.1', // 行間を詰める
-      transition: 'all 0.3s ease'
-    }}>
-      ブルグミュラー25の練習曲 お気に入りランキング
-    </h1>
-    
-    <div style={{ 
-      display: 'flex', 
-      gap: getSizeBasedStyle(4, 6, 8), // ギャップを小さく
-      transition: 'all 0.3s ease'
-    }}>
-      {/* 名前とコメント入力フォーム（ボタンの横） */}
-      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-        <input
-          type="text"
-          placeholder="お名前"
-          value={userName}
-          onChange={(e) => setUserName(e.target.value)}
-          style={{
-            padding: getSizeBasedStyle('1px 3px', '2px 4px', '3px 6px'),
-            fontSize: getSizeBasedStyle(10, 11, 12),
-            border: '1px solid #d1d5db',
-            borderRadius: '2px',
-            width: getSizeBasedStyle(100, 120, 150)
-          }}
-        />
-        <input
-          type="text"
-          placeholder="コメント"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          style={{
-            padding: getSizeBasedStyle('1px 3px', '2px 4px', '3px 6px'),
-            fontSize: getSizeBasedStyle(10, 11, 12),
-            border: '1px solid #d1d5db',
-            borderRadius: '2px',
-            width: getSizeBasedStyle(150, 180, 220)
-          }}
-        />
-      </div>
-      
-      <button
-        onClick={handleReset}
-        style={{
-          padding: getSizeBasedStyle('2px 4px', '3px 6px', '4px 8px'), // パディングを小さく
-          backgroundColor: '#6b7280',
-          color: 'white',
-          borderRadius: '2px',
-          cursor: 'pointer',
-          fontSize: getSizeBasedStyle(10, 11, 12), // フォントサイズを小さく
-          border: 'none',
-          transition: 'all 0.3s ease'
-        }}
-      >
-        リセット
-      </button>
-      
-      <button
-        onClick={handleDownloadPDF}
-        disabled={isGeneratingPDF}
-        style={{
-          padding: getSizeBasedStyle('2px 4px', '3px 6px', '4px 8px'), // パディングを小さく
-          backgroundColor: '#3b82f6',
-          color: 'white',
-          borderRadius: '2px',
-          cursor: isGeneratingPDF ? 'not-allowed' : 'pointer',
-          opacity: isGeneratingPDF ? 0.7 : 1,
-          fontSize: getSizeBasedStyle(10, 11, 12), // フォントサイズを小さく
-          border: 'none',
-          transition: 'all 0.3s ease'
-        }}
-      >
-        {isGeneratingPDF ? 'PDF生成中...' : 'PDFダウンロード'}
-      </button>
-    </div>
-  </div>
+    ブルグミュラー25の練習曲 お気に入りランキング
+  </h1>
   
-  {/* 送信結果メッセージ（設定されている場合のみ表示） */}
-  {submitResult && (
-    <div style={{ 
-      padding: '8px 12px', 
-      marginBottom: '8px', 
-      borderRadius: '4px',
-      backgroundColor: submitResult.success ? '#dcfce7' : '#fee2e2',
-      color: submitResult.success ? '#166534' : '#991b1b',
-      fontSize: getSizeBasedStyle(11, 12, 13)
-    }}>
-      {submitResult.message}
-    </div>
-  )}
-  
-  {/* ティアリスト */}
-  <div 
-    id="tiers-list" 
-    style={{ 
-      marginBottom: getSizeBasedStyle(2, 3, 4), // マージンを小さく
-      display: 'flex',
-      flexDirection: 'column',
-      gap: getSizeBasedStyle(1, 2, 3), // ギャップを小さく
-      transition: 'all 0.3s ease'
-    }}
-  >
-    {tiers.map(tier => (
-      <div
-        key={tier.id}
-        onDrop={(e) => handleDrop(e, tier.id)}
-        onDragOver={handleDragOver}
-        style={{ 
-          display: 'flex', 
-          marginBottom: '1px', // マージンを最小に
+  <div style={{ 
+    display: 'flex', 
+    gap: getSizeBasedStyle(4, 6, 8), // ギャップを小さく
+    transition: 'all 0.3s ease'
+  }}>
+    {/* 名前とコメント入力フォーム（ボタンの横） */}
+    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+      <input
+        type="text"
+        placeholder="お名前"
+        value={userName}
+        onChange={(e) => setUserName(e.target.value)}
+        style={{
+          padding: getSizeBasedStyle('1px 3px', '2px 4px', '3px 6px'),
+          fontSize: getSizeBasedStyle(10, 11, 12),
           border: '1px solid #d1d5db',
-          transition: 'all 0.3s ease'
+          borderRadius: '2px',
+          width: getSizeBasedStyle(100, 120, 150)
         }}
-      >
-        <div 
-          style={{ 
-            width: getSizeBasedStyle(20, 30, 40), // さらに幅を小さく
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            fontWeight: 'bold',
-            backgroundColor: tier.color,
-            fontSize: getSizeBasedStyle(13, 15, 17), // フォントサイズを小さく
-            transition: 'all 0.3s ease'
-          }}
-        >
-          {tier.label}
-        </div>
-        <div 
-          ref={el => tierRefs.current[tier.id] = el} // ティア要素への参照を保存
-          style={{ 
-            flex: '1', 
-            minHeight: `${getTierHeight()}px`,
-            maxHeight: `${getTierHeight()}px`,
-            padding: '2px', // パディングを少し増やす
-            backgroundColor: '#f3f4f6', 
-            display: 'flex', 
-            flexWrap: 'wrap',
-            alignContent: 'flex-start', // 上揃えでラップ
-            overflow: 'auto',
-            transition: 'all 0.3s ease'
-          }}
-        >
-          {tierAssignments[tier.id].map(pieceId => getPieceElement(pieceId))}
-          {tierAssignments[tier.id].length === 0 && (
-            <span style={{ 
-              color: '#9ca3af', 
-              padding: '0 4px',
-              fontSize: getSizeBasedStyle(9, 10, 11), // フォントサイズを小さく
-              display: 'flex',
-              alignItems: 'center',
-              height: '100%'
-            }}>
-              曲をここにドラッグ
-            </span>
-          )}
-        </div>
-      </div>
-    ))}
-  </div>
-  
-  {/* 未割り当て曲 - 常に表示するが高さを調整 */}
-  <div 
-    id="unassigned-section" 
-    style={{ 
-      marginTop: '1px', // マージンを最小に
-      marginBottom: '1px', // マージンを最小に
-      transition: 'all 0.3s ease'
-    }}
-  >
-    <div style={{ 
-      fontWeight: 'bold', 
-      marginBottom: '1px', // マージンを最小に
-      fontSize: getSizeBasedStyle(10, 11, 13), // フォントサイズを小さく
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      transition: 'all 0.3s ease'
-    }}>
-      <span>未分類の曲:</span>
-      {isUnassignedEmpty && (
-        <span style={{ 
-          fontSize: getSizeBasedStyle(8, 9, 10), // フォントサイズを小さく
-          color: '#6b7280'
-        }}>
-          すべての曲が分類されています
-        </span>
-      )}
+      />
+      <input
+        type="text"
+        placeholder="コメント"
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        style={{
+          padding: getSizeBasedStyle('1px 3px', '2px 4px', '3px 6px'),
+          fontSize: getSizeBasedStyle(10, 11, 12),
+          border: '1px solid #d1d5db',
+          borderRadius: '2px',
+          width: getSizeBasedStyle(150, 180, 220)
+        }}
+      />
     </div>
-    <div
-      ref={el => tierRefs.current['unassigned'] = el} // 未分類エリアへの参照を保存
-      onDrop={(e) => handleDrop(e, 'unassigned')}
-      onDragOver={handleDragOver}
-      style={{ 
-        padding: '2px', // パディングを増やす
-        border: '1px solid #d1d5db', 
-        backgroundColor: '#f3f4f6', 
-        display: 'flex', 
-        flexWrap: 'wrap',
-        gap: '1px', // ギャップを最小に
-        minHeight: `${getUnassignedHeight()}px`,
-        maxHeight: `${getUnassignedHeight()}px`,
-        overflowY: 'auto',
-        alignContent: 'flex-start', // 上揃えでラップ
+    
+    <button
+      onClick={handleReset}
+      style={{
+        padding: getSizeBasedStyle('2px 4px', '3px 6px', '4px 8px'), // パディングを小さく
+        backgroundColor: '#6b7280',
+        color: 'white',
+        borderRadius: '2px',
+        cursor: 'pointer',
+        fontSize: getSizeBasedStyle(10, 11, 12), // フォントサイズを小さく
+        border: 'none',
         transition: 'all 0.3s ease'
       }}
     >
-      {tierAssignments.unassigned.map(pieceId => getPieceElement(pieceId))}
-      {tierAssignments.unassigned.length === 0 && (
-        <span style={{ 
-          color: '#9ca3af', 
-          padding: '0 4px',
-          fontSize: getSizeBasedStyle(9, 10, 11), // フォントサイズを小さく
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          width: '100%',
-          justifyContent: 'center',
-          transition: 'all 0.3s ease'
-        }}>
-          ここにドラッグして未分類に戻せます
-        </span>
-      )}
-    </div>
-  </div>
-  
-  {/* ランキング送信ボタン */}
-  <div style={{ 
-    marginTop: '8px',
-    marginBottom: '8px',
-    display: 'flex',
-    justifyContent: 'flex-end'
-  }}>
+      リセット
+    </button>
+    
     <button
-      onClick={submitRanking}
-      disabled={isSubmitting}
-      style={{ 
-        padding: getSizeBasedStyle('2px 4px', '3px 6px', '4px 8px'),
-        backgroundColor: '#10b981', // グリーン
-        color: 'white', 
+      onClick={handleDownloadPDF}
+      disabled={isGeneratingPDF}
+      style={{
+        padding: getSizeBasedStyle('2px 4px', '3px 6px', '4px 8px'), // パディングを小さく
+        backgroundColor: '#3b82f6',
+        color: 'white',
         borderRadius: '2px',
-        cursor: isSubmitting ? 'not-allowed' : 'pointer',
-        opacity: isSubmitting ? 0.5 : 1,
-        fontSize: getSizeBasedStyle(10, 11, 12),
-        border: 'none'
+        cursor: isGeneratingPDF ? 'not-allowed' : 'pointer',
+        opacity: isGeneratingPDF ? 0.7 : 1,
+        fontSize: getSizeBasedStyle(10, 11, 12), // フォントサイズを小さく
+        border: 'none',
+        transition: 'all 0.3s ease'
       }}
     >
-      {isSubmitting ? '送信中...' : 'ランキングを送信する'}
+      {isGeneratingPDF ? 'PDF生成中...' : 'PDFダウンロード'}
     </button>
   </div>
-  
-  {/* クレジット表示 */}
+</div>
+
+{/* 送信結果メッセージ（設定されている場合のみ表示） */}
+{submitResult && (
   <div style={{ 
-    fontSize: getSizeBasedStyle(7, 8, 9), // フォントサイズを最小に
-    color: '#9ca3af', 
-    textAlign: 'right',
+    padding: '8px 12px', 
+    marginBottom: '8px', 
+    borderRadius: '4px',
+    backgroundColor: submitResult.success ? '#dcfce7' : '#fee2e2',
+    color: submitResult.success ? '#166534' : '#991b1b',
+    fontSize: getSizeBasedStyle(11, 12, 13)
+  }}>
+    {submitResult.message}
+  </div>
+)}
+
+{/* ティアリスト */}
+<div 
+  id="tiers-list" 
+  style={{ 
+    marginBottom: getSizeBasedStyle(2, 3, 4), // マージンを小さく
+    display: 'flex',
+    flexDirection: 'column',
+    gap: getSizeBasedStyle(1, 2, 3), // ギャップを小さく
+    transition: 'all 0.3s ease'
+  }}
+>
+  {tiers.map(tier => (
+    <div
+      key={tier.id}
+      onDrop={(e) => handleDrop(e, tier.id)}
+      onDragOver={handleDragOver}
+      style={{ 
+        display: 'flex', 
+        marginBottom: '1px', // マージンを最小に
+        border: '1px solid #d1d5db',
+        transition: 'all 0.3s ease'
+      }}
+    >
+      <div 
+        style={{ 
+          width: getSizeBasedStyle(20, 30, 40), // さらに幅を小さく
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          fontWeight: 'bold',
+          backgroundColor: tier.color,
+          fontSize: getSizeBasedStyle(13, 15, 17), // フォントサイズを小さく
+          transition: 'all 0.3s ease'
+        }}
+      >
+        {tier.label}
+      </div>
+      <div 
+        ref={el => tierRefs.current[tier.id] = el} // ティア要素への参照を保存
+        style={{ 
+          flex: '1', 
+          minHeight: `${getTierHeight()}px`,
+          maxHeight: `${getTierHeight()}px`,
+          padding: '2px', // パディングを少し増やす
+          backgroundColor: '#f3f4f6', 
+          display: 'flex', 
+          flexWrap: 'wrap',
+          alignContent: 'flex-start', // 上揃えでラップ
+          overflow: 'auto',
+          transition: 'all 0.3s ease'
+        }}
+      >
+        {tierAssignments[tier.id].map(pieceId => getPieceElement(pieceId))}
+        {tierAssignments[tier.id].length === 0 && (
+          <span style={{ 
+            color: '#9ca3af', 
+            padding: '0 4px',
+            fontSize: getSizeBasedStyle(9, 10, 11), // フォントサイズを小さく
+            display: 'flex',
+            alignItems: 'center',
+            height: '100%'
+          }}>
+            曲をここにドラッグ
+          </span>
+        )}
+      </div>
+    </div>
+  ))}
+</div>
+
+{/* 未割り当て曲 - 常に表示するが高さを調整 */}
+<div 
+  id="unassigned-section" 
+  style={{ 
     marginTop: '1px', // マージンを最小に
+    marginBottom: '1px', // マージンを最小に
+    transition: 'all 0.3s ease'
+  }}
+>
+  <div style={{ 
+    fontWeight: 'bold', 
+    marginBottom: '1px', // マージンを最小に
+    fontSize: getSizeBasedStyle(10, 11, 13), // フォントサイズを小さく
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     transition: 'all 0.3s ease'
   }}>
-    作成日: {new Date().toLocaleDateString('ja-JP')}
+    <span>未分類の曲:</span>
+    {isUnassignedEmpty && (
+      <span style={{ 
+        fontSize: getSizeBasedStyle(8, 9, 10), // フォントサイズを小さく
+        color: '#6b7280'
+      }}>
+        すべての曲が分類されています
+      </span>
+    )}
   </div>
+  <div
+    ref={el => tierRefs.current['unassigned'] = el} // 未分類エリアへの参照を保存
+    onDrop={(e) => handleDrop(e, 'unassigned')}
+    onDragOver={handleDragOver}
+    style={{ 
+      padding: '2px', // パディングを増やす
+      border: '1px solid #d1d5db', 
+      backgroundColor: '#f3f4f6', 
+      display: 'flex', 
+      flexWrap: 'wrap',
+      gap: '1px', // ギャップを最小に
+      minHeight: `${getUnassignedHeight()}px`,
+      maxHeight: `${getUnassignedHeight()}px`,
+      overflowY: 'auto',
+      alignContent: 'flex-start', // 上揃えでラップ
+      transition: 'all 0.3s ease'
+    }}
+  >
+    {tierAssignments.unassigned.map(pieceId => getPieceElement(pieceId))}
+    {tierAssignments.unassigned.length === 0 && (
+      <span style={{ 
+        color: '#9ca3af', 
+        padding: '0 4px',
+        fontSize: getSizeBasedStyle(9, 10, 11), // フォントサイズを小さく
+        display: 'flex',
+        alignItems: 'center',
+        height: '100%',
+        width: '100%',
+        justifyContent: 'center',
+        transition: 'all 0.3s ease'
+      }}>
+        ここにドラッグして未分類に戻せます
+      </span>
+    )}
+  </div>
+</div>
+
+{/* ランキング送信ボタン */}
+<div style={{ 
+  marginTop: '8px',
+  marginBottom: '8px',
+  display: 'flex',
+  justifyContent: 'flex-end'
+}}>
+  <button
+    onClick={submitRanking}
+    disabled={isSubmitting}
+    style={{ 
+      padding: getSizeBasedStyle('2px 4px', '3px 6px', '4px 8px'),
+      backgroundColor: '#10b981', // グリーン
+      color: 'white', 
+      borderRadius: '2px',
+      cursor: isSubmitting ? 'not-allowed' : 'pointer',
+      opacity: isSubmitting ? 0.5 : 1,
+      fontSize: getSizeBasedStyle(10, 11, 12),
+      border: 'none'
+    }}
+  >
+    {isSubmitting ? '送信中...' : 'ランキングを送信する'}
+  </button>
+</div>
+
+{/* クレジット表示 */}
+<div style={{ 
+  fontSize: getSizeBasedStyle(7, 8, 9), // フォントサイズを最小に
+  color: '#9ca3af', 
+  textAlign: 'right',
+  marginTop: '1px', // マージンを最小に
+  transition: 'all 0.3s ease'
+}}>
+  作成日: {new Date().toLocaleDateString('ja-JP')}
+</div>
 </div>
 );
 };
