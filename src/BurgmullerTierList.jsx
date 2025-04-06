@@ -71,6 +71,15 @@ const BurgmullerTierList = () => {
   const contentRef = useRef(null);
   // ウィンドウサイズ測定用のRef
   const containerRef = useRef(null);
+  // 名前とコメントの保持用Ref
+  const userNameRef = useRef(userName);
+  const commentRef = useRef(comment);
+
+  // useStateの値をrefに同期
+  useEffect(() => {
+    userNameRef.current = userName;
+    commentRef.current = comment;
+  }, [userName, comment]);
 
   // 画面サイズの監視と更新
   useEffect(() => {
@@ -235,6 +244,7 @@ const BurgmullerTierList = () => {
     setDraggedPiece(null);
     setDragStartX(null);
     setDragDirection(null);
+    // 注意: ユーザー名とコメントはリセットしない
   };
 
   // 送信ハンドラー関数
@@ -326,7 +336,11 @@ const BurgmullerTierList = () => {
       container.appendChild(title);
       
       // ユーザー情報セクションを追加
-      if (userName) {
+      // refから最新の値を取得
+      const currentUserName = userNameRef.current;
+      const currentComment = commentRef.current;
+      
+      if (currentUserName) {
         const userInfo = document.createElement('div');
         userInfo.style.marginBottom = '20px';
         userInfo.style.padding = '10px';
@@ -337,14 +351,14 @@ const BurgmullerTierList = () => {
         const nameElement = document.createElement('p');
         nameElement.style.margin = '0 0 5px 0';
         nameElement.style.fontWeight = 'bold';
-        nameElement.textContent = `お名前: ${userName}`;
+        nameElement.textContent = `お名前: ${currentUserName}`;
         userInfo.appendChild(nameElement);
         
-        if (comment) {
+        if (currentComment) {
           const commentElement = document.createElement('p');
           commentElement.style.margin = '0';
           commentElement.style.whiteSpace = 'pre-wrap';
-          commentElement.textContent = `コメント: ${comment}`;
+          commentElement.textContent = `コメント: ${currentComment}`;
           userInfo.appendChild(commentElement);
         }
         
