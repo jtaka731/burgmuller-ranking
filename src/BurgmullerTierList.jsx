@@ -244,9 +244,21 @@ const BurgmullerTierList = () => {
     25: '#bfdbfe'
   };
 
+  // GitHub Pagesでのベースパスを取得
+  const getBasePath = () => {
+    // ローカル環境とGitHub Pages環境で異なるパスを返す
+    // window.location.hostnameが'localhost'または'127.0.0.1'の場合はローカル環境
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return '';
+    } else {
+      return '/burgmuller-ranking'; // GitHub Pagesでのリポジトリ名
+    }
+  };
+
   // 曲の要素を取得する関数（コンパクト版）
   const getPieceElement = (pieceId) => {
     const piece = burgmullerPieces.find(p => p.id === pieceId);
+    const basePath = getBasePath();
     
     return (
       <div
@@ -281,7 +293,7 @@ const BurgmullerTierList = () => {
           }}
         >
           <img 
-            src={`/images/piece${piece.id}.jpg`} 
+            src={`${basePath}/images/piece${piece.id}.jpg`} 
             alt={piece.title}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             onError={(e) => {
