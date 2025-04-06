@@ -398,58 +398,64 @@ const BurgmullerTierList = () => {
     return small;
   };
 
+  // ノートPC向けに最適化した曲アイテムのサイズ設定
   // 画面サイズに応じた曲アイテムの幅
   const getPieceWidth = () => {
     if (isUnassignedEmpty) {
-      return getSizeBasedStyle(85, 100, 120); // 未分類が空の場合
+      return getSizeBasedStyle(70, 90, 110); // 未分類が空の場合（ノートPCで小さく）
     } else {
-      return getSizeBasedStyle(75, 90, 110); // 未分類がある場合
+      return getSizeBasedStyle(65, 85, 100); // 未分類がある場合（ノートPCで小さく）
     }
   };
 
   // 画面サイズに応じた画像サイズ
   const getImageSize = () => {
     if (isUnassignedEmpty) {
-      return getSizeBasedStyle(75, 90, 110); // 未分類が空の場合
+      return getSizeBasedStyle(60, 80, 100); // 未分類が空の場合（ノートPCで小さく）
     } else {
-      return getSizeBasedStyle(65, 80, 100); // 未分類がある場合
+      return getSizeBasedStyle(50, 75, 90); // 未分類がある場合（ノートPCで小さく）
     }
   };
 
   // 画面サイズに応じたティア高さ
   const getTierHeight = () => {
     if (isUnassignedEmpty) {
-      return getSizeBasedStyle(80, 100, 120); // 未分類が空の場合
+      return getSizeBasedStyle(70, 90, 110); // 未分類が空の場合（ノートPCで小さく）
     } else {
-      return getSizeBasedStyle(66, 80, 100); // 未分類がある場合
+      return getSizeBasedStyle(60, 75, 90); // 未分類がある場合（ノートPCで小さく）
     }
   };
 
   // 画面サイズに応じた未分類エリアの高さ
   const getUnassignedHeight = () => {
     if (isUnassignedEmpty) {
-      return getSizeBasedStyle(40, 40, 40); // 未分類が空の場合（常に小さめ）
+      return getSizeBasedStyle(30, 35, 40); // 未分類が空の場合（常に小さめ）
     } else {
-      return getSizeBasedStyle(80, 90, 110); // 未分類がある場合
+      return getSizeBasedStyle(70, 80, 100); // 未分類がある場合（ノートPCで小さく）
     }
   };
 
   // 画面サイズに応じたフォントサイズ
   const getFontSize = () => {
     if (isUnassignedEmpty) {
-      return getSizeBasedStyle(10, 12, 14); // 未分類が空の場合
+      return getSizeBasedStyle(9, 11, 13); // 未分類が空の場合（ノートPCで小さく）
     } else {
-      return getSizeBasedStyle(8, 10, 12); // 未分類がある場合
+      return getSizeBasedStyle(8, 10, 12); // 未分類がある場合（ノートPCで小さく）
     }
   };
 
   // 曲名表示エリアの高さ
   const getTitleHeight = () => {
     if (isUnassignedEmpty) {
-      return getSizeBasedStyle(24, 28, 32); // 未分類が空の場合
+      return getSizeBasedStyle(22, 26, 30); // 未分類が空の場合（ノートPCで小さく）
     } else {
-      return getSizeBasedStyle(18, 22, 26); // 未分類がある場合
+      return getSizeBasedStyle(16, 20, 24); // 未分類がある場合（ノートPCで小さく）
     }
+  };
+
+  // コンテナの最大幅の設定（画面サイズに応じて）
+  const getContainerMaxWidth = () => {
+    return getSizeBasedStyle(1200, 1440, '80%'); // ノートPCでは1200pxに縮小
   };
 
   // 曲の要素を取得する関数（レスポンシブ対応版）
@@ -470,8 +476,8 @@ const BurgmullerTierList = () => {
         onDragStart={(e) => handleDragStart(e, pieceId)}
         onDragEnd={handleDragEnd}
         style={{
-          padding: getSizeBasedStyle(2, 3, 4),
-          margin: getSizeBasedStyle(1, 2, 3),
+          padding: getSizeBasedStyle(1, 2, 3), // パディングを小さく
+          margin: getSizeBasedStyle(1, 1, 2), // マージンを小さく
           backgroundColor: 'white',
           border: '1px solid #d1d5db',
           borderRadius: '3px',
@@ -492,7 +498,7 @@ const BurgmullerTierList = () => {
             alignItems: 'center',
             justifyContent: 'center',
             borderRadius: '3px',
-            marginBottom: getSizeBasedStyle(1, 2, 3),
+            marginBottom: getSizeBasedStyle(1, 1, 2), // マージンを小さく
             overflow: 'hidden',
             transition: 'all 0.3s ease'
           }}
@@ -508,7 +514,7 @@ const BurgmullerTierList = () => {
               // 親要素のスタイルを変更
               e.target.parentNode.style.backgroundColor = colorMapping[piece.id];
               // 番号を表示
-              e.target.parentNode.innerHTML = `<span style="font-size: ${fontSize + 4}px; font-weight: bold;">${piece.id}</span>`;
+              e.target.parentNode.innerHTML = `<span style="font-size: ${fontSize + 3}px; font-weight: bold;">${piece.id}</span>`;
             }}
           />
         </div>
@@ -522,7 +528,7 @@ const BurgmullerTierList = () => {
           justifyContent: 'center',
           width: '100%',
           overflow: 'hidden',
-          padding: '0 2px',
+          padding: '0 1px', // パディングを小さく
           transition: 'all 0.3s ease'
         }}>
           {piece.title}
@@ -530,230 +536,226 @@ const BurgmullerTierList = () => {
       </div>
     );
   };
-// コンテナの最大幅の設定（画面サイズに応じて）
-const getContainerMaxWidth = () => {
-  return getSizeBasedStyle(1280, 1440, '80%'); // 大画面では画面幅の80%を使用
-};
 
-return (
-  <div 
-    ref={(el) => { 
-      contentRef.current = el;
-      containerRef.current = el;
-    }} 
-    style={{ 
-      padding: getSizeBasedStyle(4, 8, 16),
-      maxWidth: getContainerMaxWidth(),
-      margin: '0 auto',
-      maxHeight: '100vh', 
-      boxSizing: 'border-box',
-      transition: 'all 0.3s ease'
-    }}
-  >
-    {/* ヘッダー部分 - タイトルとボタンを横並びに */}
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: getSizeBasedStyle(4, 6, 8),
-      transition: 'all 0.3s ease'
-    }}>
-      <h1 style={{ 
-        fontSize: getSizeBasedStyle(18, 20, 24),
-        fontWeight: 'bold', 
-        margin: '0',
-        lineHeight: '1.2',
-        transition: 'all 0.3s ease'
-      }}>
-        ブルグミュラー25の練習曲 お気に入りランキング
-      </h1>
-      
-      <div style={{ 
-        display: 'flex', 
-        gap: getSizeBasedStyle(8, 10, 12),
-        transition: 'all 0.3s ease'
-      }}>
-        <button
-          onClick={handleReset}
-          style={{
-            padding: getSizeBasedStyle('4px 8px', '5px 10px', '6px 12px'),
-            backgroundColor: '#6b7280',
-            color: 'white',
-            borderRadius: '3px',
-            cursor: 'pointer',
-            fontSize: getSizeBasedStyle(12, 13, 14),
-            border: 'none',
-            transition: 'all 0.3s ease'
-          }}
-        >
-          リセット
-        </button>
-        
-        <button
-          onClick={handleDownloadPDF}
-          disabled={isGeneratingPDF}
-          style={{
-            padding: getSizeBasedStyle('4px 8px', '5px 10px', '6px 12px'),
-            backgroundColor: '#3b82f6',
-            color: 'white',
-            borderRadius: '3px',
-            cursor: isGeneratingPDF ? 'not-allowed' : 'pointer',
-            opacity: isGeneratingPDF ? 0.7 : 1,
-            fontSize: getSizeBasedStyle(12, 13, 14),
-            border: 'none',
-            transition: 'all 0.3s ease'
-          }}
-        >
-          {isGeneratingPDF ? 'PDF生成中...' : 'PDFダウンロード'}
-        </button>
-      </div>
-    </div>
-    
-    {/* ティアリスト */}
+  return (
     <div 
-      id="tiers-list" 
+      ref={(el) => { 
+        contentRef.current = el;
+        containerRef.current = el;
+      }} 
       style={{ 
-        marginBottom: getSizeBasedStyle(8, 10, 12),
-        display: 'flex',
-        flexDirection: 'column',
-        gap: getSizeBasedStyle(2, 3, 4),
+        padding: getSizeBasedStyle(2, 6, 12), // ノートPCではパディングを小さく
+        maxWidth: getContainerMaxWidth(),
+        margin: '0 auto',
+        maxHeight: '100vh', 
+        boxSizing: 'border-box',
         transition: 'all 0.3s ease'
       }}
     >
-      {tiers.map(tier => (
-        <div
-          key={tier.id}
-          onDrop={(e) => handleDrop(e, tier.id)}
-          onDragOver={handleDragOver}
-          style={{ 
-            display: 'flex', 
-            marginBottom: getSizeBasedStyle(2, 3, 4),
-            border: '1px solid #d1d5db',
-            transition: 'all 0.3s ease'
-          }}
-        >
-          <div 
-            style={{ 
-              width: getSizeBasedStyle(30, 40, 50),
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              fontWeight: 'bold',
-              backgroundColor: tier.color,
-              fontSize: getSizeBasedStyle(16, 18, 20),
-              transition: 'all 0.3s ease'
-            }}
-          >
-            {tier.label}
-          </div>
-          <div 
-            ref={el => tierRefs.current[tier.id] = el} // ティア要素への参照を保存
-            style={{ 
-              flex: '1', 
-              minHeight: `${getTierHeight()}px`,
-              maxHeight: `${getTierHeight()}px`,
-              padding: getSizeBasedStyle(2, 3, 4),
-              backgroundColor: '#f3f4f6', 
-              display: 'flex', 
-              flexWrap: 'wrap',
-              overflow: 'auto',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            {tierAssignments[tier.id].map(pieceId => getPieceElement(pieceId))}
-            {tierAssignments[tier.id].length === 0 && (
-              <span style={{ 
-                color: '#9ca3af', 
-                padding: '0 4px',
-                fontSize: getSizeBasedStyle(11, 12, 14),
-                display: 'flex',
-                alignItems: 'center',
-                height: '100%'
-              }}>
-                曲をここにドラッグ
-              </span>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-    
-    {/* 未割り当て曲 - 常に表示するが高さを調整 */}
-    <div 
-      id="unassigned-section" 
-      style={{ 
-        marginTop: getSizeBasedStyle(4, 6, 8), 
-        marginBottom: getSizeBasedStyle(4, 6, 8),
-        transition: 'all 0.3s ease'
-      }}
-    >
-      <div style={{ 
-        fontWeight: 'bold', 
-        marginBottom: getSizeBasedStyle(2, 3, 4),
-        fontSize: getSizeBasedStyle(12, 14, 16),
+      {/* ヘッダー部分 - タイトルとボタンを横並びに */}
+      <div style={{
         display: 'flex',
-        justifyContent: 'space-between',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: getSizeBasedStyle(2, 4, 6), // ノートPCでマージンを小さく
         transition: 'all 0.3s ease'
       }}>
-        <span>未分類の曲:</span>
-        {isUnassignedEmpty && (
-          <span style={{ 
-            fontSize: getSizeBasedStyle(10, 11, 12), 
-            color: '#6b7280'
-          }}>
-            すべての曲が分類されています
-          </span>
-        )}
-      </div>
-      <div
-        ref={el => tierRefs.current['unassigned'] = el} // 未分類エリアへの参照を保存
-        onDrop={(e) => handleDrop(e, 'unassigned')}
-        onDragOver={handleDragOver}
-        style={{ 
-          padding: getSizeBasedStyle(4, 6, 8),
-          border: '1px solid #d1d5db', 
-          backgroundColor: '#f3f4f6', 
+        <h1 style={{ 
+          fontSize: getSizeBasedStyle(16, 18, 22), // ノートPCでフォントサイズを小さく
+          fontWeight: 'bold', 
+          margin: '0',
+          lineHeight: '1.2',
+          transition: 'all 0.3s ease'
+        }}>
+          ブルグミュラー25の練習曲 お気に入りランキング
+        </h1>
+        
+        <div style={{ 
           display: 'flex', 
-          flexWrap: 'wrap',
-          gap: getSizeBasedStyle(1, 2, 3),
-          minHeight: `${getUnassignedHeight()}px`,
-          maxHeight: `${getUnassignedHeight()}px`,
-          overflowY: 'auto',
+          gap: getSizeBasedStyle(6, 8, 10), // ノートPCでギャップを小さく
+          transition: 'all 0.3s ease'
+        }}>
+          <button
+            onClick={handleReset}
+            style={{
+              padding: getSizeBasedStyle('3px 6px', '4px 8px', '5px 10px'), // ノートPCでパディングを小さく
+              backgroundColor: '#6b7280',
+              color: 'white',
+              borderRadius: '3px',
+              cursor: 'pointer',
+              fontSize: getSizeBasedStyle(11, 12, 13), // ノートPCでフォントサイズを小さく
+              border: 'none',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            リセット
+          </button>
+          
+          <button
+            onClick={handleDownloadPDF}
+            disabled={isGeneratingPDF}
+            style={{
+              padding: getSizeBasedStyle('3px 6px', '4px 8px', '5px 10px'), // ノートPCでパディングを小さく
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              borderRadius: '3px',
+              cursor: isGeneratingPDF ? 'not-allowed' : 'pointer',
+              opacity: isGeneratingPDF ? 0.7 : 1,
+              fontSize: getSizeBasedStyle(11, 12, 13), // ノートPCでフォントサイズを小さく
+              border: 'none',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            {isGeneratingPDF ? 'PDF生成中...' : 'PDFダウンロード'}
+          </button>
+        </div>
+      </div>
+      
+      {/* ティアリスト */}
+      <div 
+        id="tiers-list" 
+        style={{ 
+          marginBottom: getSizeBasedStyle(4, 6, 8), // ノートPCでマージンを小さく
+          display: 'flex',
+          flexDirection: 'column',
+          gap: getSizeBasedStyle(1, 2, 3), // ノートPCでギャップを小さく
           transition: 'all 0.3s ease'
         }}
       >
-        {tierAssignments.unassigned.map(pieceId => getPieceElement(pieceId))}
-        {tierAssignments.unassigned.length === 0 && (
-          <span style={{ 
-            color: '#9ca3af', 
-            padding: '0 4px',
-            fontSize: getSizeBasedStyle(11, 12, 14),
-            display: 'flex',
-            alignItems: 'center',
-            height: '100%',
-            width: '100%',
-            justifyContent: 'center',
+        {tiers.map(tier => (
+          <div
+            key={tier.id}
+            onDrop={(e) => handleDrop(e, tier.id)}
+            onDragOver={handleDragOver}
+            style={{ 
+              display: 'flex', 
+              marginBottom: getSizeBasedStyle(1, 2, 3), // ノートPCでマージンを小さく
+              border: '1px solid #d1d5db',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <div 
+              style={{ 
+                width: getSizeBasedStyle(25, 35, 45), // ノートPCで幅を小さく
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                fontWeight: 'bold',
+                backgroundColor: tier.color,
+                fontSize: getSizeBasedStyle(14, 16, 18), // ノートPCでフォントサイズを小さく
+                transition: 'all 0.3s ease'
+              }}
+            >
+              {tier.label}
+            </div>
+            <div 
+              ref={el => tierRefs.current[tier.id] = el} // ティア要素への参照を保存
+              style={{ 
+                flex: '1', 
+                minHeight: `${getTierHeight()}px`,
+                maxHeight: `${getTierHeight()}px`,
+                padding: getSizeBasedStyle(1, 2, 3), // ノートPCでパディングを小さく
+                backgroundColor: '#f3f4f6', 
+                display: 'flex', 
+                flexWrap: 'wrap',
+                overflow: 'auto',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              {tierAssignments[tier.id].map(pieceId => getPieceElement(pieceId))}
+              {tierAssignments[tier.id].length === 0 && (
+                <span style={{ 
+                  color: '#9ca3af', 
+                  padding: '0 4px',
+                  fontSize: getSizeBasedStyle(10, 11, 12), // ノートPCでフォントサイズを小さく
+                  display: 'flex',
+                  alignItems: 'center',
+                  height: '100%'
+                }}>
+                  曲をここにドラッグ
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      {/* 未割り当て曲 - 常に表示するが高さを調整 */}
+      <div 
+        id="unassigned-section" 
+        style={{ 
+          marginTop: getSizeBasedStyle(2, 4, 6), // ノートPCでマージンを小さく
+          marginBottom: getSizeBasedStyle(2, 4, 6), // ノートPCでマージンを小さく
+          transition: 'all 0.3s ease'
+        }}
+      >
+        <div style={{ 
+          fontWeight: 'bold', 
+          marginBottom: getSizeBasedStyle(1, 2, 3), // ノートPCでマージンを小さく
+          fontSize: getSizeBasedStyle(11, 12, 14), // ノートPCでフォントサイズを小さく
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          transition: 'all 0.3s ease'
+        }}>
+          <span>未分類の曲:</span>
+          {isUnassignedEmpty && (
+            <span style={{ 
+              fontSize: getSizeBasedStyle(9, 10, 11), // ノートPCでフォントサイズを小さく
+              color: '#6b7280'
+            }}>
+              すべての曲が分類されています
+            </span>
+          )}
+        </div>
+        <div
+          ref={el => tierRefs.current['unassigned'] = el} // 未分類エリアへの参照を保存
+          onDrop={(e) => handleDrop(e, 'unassigned')}
+          onDragOver={handleDragOver}
+          style={{ 
+            padding: getSizeBasedStyle(2, 4, 6), // ノートPCでパディングを小さく
+            border: '1px solid #d1d5db', 
+            backgroundColor: '#f3f4f6', 
+            display: 'flex', 
+            flexWrap: 'wrap',
+            gap: getSizeBasedStyle(1, 1, 2), // ノートPCでギャップを小さく
+            minHeight: `${getUnassignedHeight()}px`,
+            maxHeight: `${getUnassignedHeight()}px`,
+            overflowY: 'auto',
             transition: 'all 0.3s ease'
-          }}>
-            ここにドラッグして未分類に戻せます
-          </span>
-        )}
+          }}
+        >
+          {tierAssignments.unassigned.map(pieceId => getPieceElement(pieceId))}
+          {tierAssignments.unassigned.length === 0 && (
+            <span style={{ 
+              color: '#9ca3af', 
+              padding: '0 4px',
+              fontSize: getSizeBasedStyle(10, 11, 12), // ノートPCでフォントサイズを小さく
+              display: 'flex',
+              alignItems: 'center',
+              height: '100%',
+              width: '100%',
+              justifyContent: 'center',
+              transition: 'all 0.3s ease'
+            }}>
+              ここにドラッグして未分類に戻せます
+            </span>
+          )}
+        </div>
+      </div>
+      
+      {/* クレジット表示 */}
+      <div style={{ 
+        fontSize: getSizeBasedStyle(8, 9, 10), // ノートPCでフォントサイズを小さく
+        color: '#9ca3af', 
+        textAlign: 'right',
+        marginTop: getSizeBasedStyle(1, 2, 3), // ノートPCでマージンを小さく
+        transition: 'all 0.3s ease'
+      }}>
+        作成日: {new Date().toLocaleDateString('ja-JP')}
       </div>
     </div>
-    
-    {/* クレジット表示 */}
-    <div style={{ 
-      fontSize: getSizeBasedStyle(9, 10, 11), 
-      color: '#9ca3af', 
-      textAlign: 'right',
-      marginTop: getSizeBasedStyle(2, 3, 4),
-      transition: 'all 0.3s ease'
-    }}>
-      作成日: {new Date().toLocaleDateString('ja-JP')}
-    </div>
-  </div>
-);
+  );
 };
 
 export default BurgmullerTierList;
