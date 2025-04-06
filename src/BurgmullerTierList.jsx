@@ -284,6 +284,7 @@ const BurgmullerTierList = () => {
               titleElement.style.height = 'auto';
               titleElement.style.fontSize = '10px';
               titleElement.style.padding = '2px 0';
+              titleElement.style.whiteSpace = 'normal'; // PDF内では改行可能に
             }
           });
         }
@@ -402,27 +403,27 @@ const BurgmullerTierList = () => {
   // 画面サイズに応じた曲アイテムの幅
   const getPieceWidth = () => {
     if (isUnassignedEmpty) {
-      return getSizeBasedStyle(65, 85, 100); // 未分類が空の場合（さらに小さく）
+      return getSizeBasedStyle(65, 85, 100); // 未分類が空の場合
     } else {
-      return getSizeBasedStyle(60, 80, 95); // 未分類がある場合（さらに小さく）
+      return getSizeBasedStyle(60, 80, 95); // 未分類がある場合
     }
   };
 
   // 画面サイズに応じた画像サイズ
   const getImageSize = () => {
     if (isUnassignedEmpty) {
-      return getSizeBasedStyle(45, 65, 85); // 未分類が空の場合（さらに小さく）
+      return getSizeBasedStyle(45, 65, 85); // 未分類が空の場合
     } else {
-      return getSizeBasedStyle(40, 60, 75); // 未分類がある場合（さらに小さく）
+      return getSizeBasedStyle(40, 60, 75); // 未分類がある場合
     }
   };
 
   // 画面サイズに応じたティア高さ
   const getTierHeight = () => {
     if (isUnassignedEmpty) {
-      return getSizeBasedStyle(55, 75, 95); // 未分類が空の場合（さらに小さく）
+      return getSizeBasedStyle(55, 75, 95); // 未分類が空の場合
     } else {
-      return getSizeBasedStyle(48, 65, 85); // 未分類がある場合（さらに小さく）
+      return getSizeBasedStyle(48, 65, 85); // 未分類がある場合
     }
   };
 
@@ -431,25 +432,25 @@ const BurgmullerTierList = () => {
     if (isUnassignedEmpty) {
       return getSizeBasedStyle(25, 30, 35); // 未分類が空の場合（常に小さめ）
     } else {
-      return getSizeBasedStyle(55, 70, 85); // 未分類がある場合（さらに小さく）
+      return getSizeBasedStyle(55, 70, 85); // 未分類がある場合
     }
   };
 
   // 画面サイズに応じたフォントサイズ
   const getFontSize = () => {
     if (isUnassignedEmpty) {
-      return getSizeBasedStyle(8, 10, 12); // 未分類が空の場合（さらに小さく）
+      return getSizeBasedStyle(8, 10, 12); // 未分類が空の場合
     } else {
-      return getSizeBasedStyle(7, 9, 11); // 未分類がある場合（さらに小さく）
+      return getSizeBasedStyle(7, 9, 11); // 未分類がある場合
     }
   };
 
   // 曲名表示エリアの高さ
   const getTitleHeight = () => {
     if (isUnassignedEmpty) {
-      return getSizeBasedStyle(12, 18, 24); // 未分類が空の場合（さらに小さく）
+      return getSizeBasedStyle(10, 16, 22); // 未分類が空の場合（縦方向縮小）
     } else {
-      return getSizeBasedStyle(10, 15, 20); // 未分類がある場合（さらに小さく）
+      return getSizeBasedStyle(9, 14, 18); // 未分類がある場合（縦方向縮小）
     }
   };
 
@@ -458,91 +459,106 @@ const BurgmullerTierList = () => {
     return getSizeBasedStyle(1200, 1440, '80%'); // ノートPCでは1200pxに縮小
   };
 
-  // 曲の要素を取得する関数（縦方向にさらに縮小）
-  const getPieceElement = (pieceId) => {
-    const piece = burgmullerPieces.find(p => p.id === pieceId);
-    const basePath = getBasePath();
-    
-    const pieceWidth = getPieceWidth();
-    const imageSize = getImageSize();
-    const fontSize = getFontSize();
-    const titleHeight = getTitleHeight();
-    
-    return (
-      <div
-        key={pieceId}
-        data-piece-id={pieceId}
-        draggable
-        onDragStart={(e) => handleDragStart(e, pieceId)}
-        onDragEnd={handleDragEnd}
+  // 画面全体の余白
+  const getBodyPadding = () => {
+    return getSizeBasedStyle(1, 4, 8); // ノートPCでは余白を最小限に
+  };
+
+  // 曲名を省略表示する関数
+  const getTruncatedTitle = (title) => {
+    // 曲番号と曲名を分ける
+    const match = title.match(/^(\d+\.\s)(.+)$/);
+    if (match) {
+      const [, number, name] = match;
+      // 曲名が一定の長さを超えたら省略
+      if (name.length > 8) {
+        return `${number}${name.substring(0, 7)}..`;
+      }
+    }
+    return title;
+  };
+
+// 曲の要素を取得する関数（1行表示+ツールチップ対応版）
+const getPieceElement = (pieceId) => {
+  const piece = burgmullerPieces.find(p => p.id === pieceId);
+  const basePath = getBasePath();
+  
+  const pieceWidth = getPieceWidth();
+  const imageSize = getImageSize();
+  const fontSize = getFontSize();
+  const titleHeight = getTitleHeight();
+  
+  return (
+    <div
+      key={pieceId}
+      data-piece-id={pieceId}
+      draggable
+      onDragStart={(e) => handleDragStart(e, pieceId)}
+      onDragEnd={handleDragEnd}
+      style={{
+        padding: '1px 1px 0px 1px', // 上下のパディングを最小化
+        margin: '1px',
+        backgroundColor: 'white',
+        border: '1px solid #d1d5db',
+        borderRadius: '2px', // 角丸を小さく
+        cursor: 'move',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        width: `${pieceWidth}px`,
+        height: 'auto', // 高さを内容に合わせる
+        boxShadow: 'none', // シャドウを削除して軽量化
+        transition: 'all 0.3s ease'
+      }}
+      title={piece.title} // ツールチップとして完全な曲名を表示
+    >
+      <div 
         style={{
-          padding: '1px 1px 0px 1px', // 上下のパディングを最小化
-          margin: '1px',
-          backgroundColor: 'white',
-          border: '1px solid #d1d5db',
-          borderRadius: '2px', // 角丸を小さく
-          cursor: 'move',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          width: `${pieceWidth}px`,
-          height: 'auto', // 高さを内容に合わせる
-          boxShadow: 'none', // シャドウを削除して軽量化
-          transition: 'all 0.3s ease'
-        }}
-      >
-        <div 
-          style={{
-            width: `${imageSize}px`,
-            height: `${imageSize}px`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: '2px', // 角丸を小さく
-            marginBottom: '0px', // 下部マージンを削除
-            overflow: 'hidden',
-            transition: 'all 0.3s ease'
-          }}
-        >
-          <img 
-            src={`${basePath}/images/piece${piece.id}.jpg`} 
-            alt={piece.title}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            onError={(e) => {
-              // 画像読み込みエラー時の代替表示
-              e.target.onerror = null;
-              e.target.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
-              // 親要素のスタイルを変更
-              e.target.parentNode.style.backgroundColor = colorMapping[piece.id];
-              // 番号を表示
-              e.target.parentNode.innerHTML = `<span style="font-size: ${fontSize + 3}px; font-weight: bold;">${piece.id}</span>`;
-            }}
-          />
-        </div>
-        <div style={{ 
-          fontSize: `${fontSize}px`,
-          textAlign: 'center',
-          lineHeight: '1', // 行間を詰める
-          height: `${titleHeight}px`,
+          width: `${imageSize}px`,
+          height: `${imageSize}px`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          width: '100%',
+          borderRadius: '2px', // 角丸を小さく
+          marginBottom: '0px', // 下部マージンを削除
           overflow: 'hidden',
-          padding: '1px 0 0 0', // 上部のみパディング
-          transition: 'all 0.3s ease',
-          whiteSpace: 'normal', // 文字を折り返し可能に
-          wordBreak: 'break-word' // 長い単語も折り返し
-        }}>
-          {piece.title}
-        </div>
+          transition: 'all 0.3s ease'
+        }}
+      >
+        <img 
+          src={`${basePath}/images/piece${piece.id}.jpg`} 
+          alt={piece.title}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          onError={(e) => {
+            // 画像読み込みエラー時の代替表示
+            e.target.onerror = null;
+            e.target.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+            // 親要素のスタイルを変更
+            e.target.parentNode.style.backgroundColor = colorMapping[piece.id];
+            // 番号を表示
+            e.target.parentNode.innerHTML = `<span style="font-size: ${fontSize + 3}px; font-weight: bold;">${piece.id}</span>`;
+          }}
+        />
       </div>
-    );
-  };
-
-// 画面全体の余白
-const getBodyPadding = () => {
-  return getSizeBasedStyle(1, 4, 8); // ノートPCでは余白を最小限に
+      <div style={{ 
+        fontSize: `${fontSize}px`,
+        textAlign: 'center',
+        lineHeight: '1', // 行間を詰める
+        height: `${titleHeight}px`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        overflow: 'hidden',
+        padding: '1px 0 0 0', // 上部のみパディング
+        transition: 'all 0.3s ease',
+        whiteSpace: 'nowrap', // 改行しない
+        textOverflow: 'ellipsis', // 長いテキストは省略記号で省略
+      }}>
+        {piece.id < 10 ? piece.title : getTruncatedTitle(piece.title)}
+      </div>
+    </div>
+  );
 };
 
 return (
