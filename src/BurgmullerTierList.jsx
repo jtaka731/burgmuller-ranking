@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import piece1Audio from './audio/piece1.mp3'; // パスは実際のフォルダ構造に合わせて調整
+
 
 const BurgmullerTierList = () => {
   // ティアのリスト (S～D)の5段階
@@ -101,48 +101,49 @@ const BurgmullerTierList = () => {
     }
   };
 
-  // 音声再生の制御 - 1つだけの実装
-  useEffect(() => {
-    console.log('再生状態が変更されました:', currentlyPlaying);
+// 音声再生の制御 - 複数曲に対応
+useEffect(() => {
+  console.log('再生状態が変更されました:', currentlyPlaying);
+  
+  // 音声要素がなければ作成
+  if (!audioRef.current) {
+    audioRef.current = new Audio();
     
-    // 音声要素がなければ作成
-    if (!audioRef.current) {
-      audioRef.current = new Audio();
-      
-      // 再生終了時のハンドラ
-      audioRef.current.addEventListener('ended', () => {
-        console.log('再生が終了しました');
-        setCurrentlyPlaying(null);
-      });
+    // 再生終了時のハンドラ
+    audioRef.current.addEventListener('ended', () => {
+      console.log('再生が終了しました');
+      setCurrentlyPlaying(null);
+    });
+  }
+  
+  // 再生する曲が変わったとき
+  if (currentlyPlaying !== null) {
+    console.log(`曲${currentlyPlaying}を再生します`);
+    // 動的にパスを構築して音声ファイルを読み込む
+    const basePath = getBasePath();
+    const audioPath = `${basePath}/audio/piece${currentlyPlaying}.mp3`;
+    
+    audioRef.current.src = audioPath;
+    audioRef.current.play().catch(error => {
+      console.error('音声再生エラー:', error);
+      setCurrentlyPlaying(null);
+    });
+  } else {
+    console.log('再生を停止します');
+    // 再生停止
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
     }
-    
-    // 再生する曲が変わったとき
-    if (currentlyPlaying !== null) {
-      console.log(`曲${currentlyPlaying}を再生します`);
-      // importした音声ファイルを使用
-      if (currentlyPlaying === 1) {
-        audioRef.current.src = piece1Audio;
-        audioRef.current.play().catch(error => {
-          console.error('音声再生エラー:', error);
-          setCurrentlyPlaying(null);
-        });
-      }
-    } else {
-      console.log('再生を停止します');
-      // 再生停止
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
+  }
+  
+  // コンポーネントのクリーンアップ時に音声を停止
+  return () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
     }
-    
-    // コンポーネントのクリーンアップ時に音声を停止
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-    };
-  }, [currentlyPlaying]);
+  };
+}, [currentlyPlaying]);
 
   // 画面サイズの監視と更新
   useEffect(() => {
