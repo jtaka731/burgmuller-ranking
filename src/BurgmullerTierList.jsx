@@ -124,7 +124,7 @@ const BurgmullerTierList = () => {
     setDraggedPiece(null);
   };
 
-  // 全ランク表示対応のPDFダウンロードハンドラ
+  // 改善版PDFダウンロードハンドラ - 全ての行が見えるようにする
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     
@@ -148,12 +148,38 @@ const BurgmullerTierList = () => {
       
       // すべてのティアを取得してコピー
       const originalTiers = document.getElementById('tiers-list').children;
+      
       Array.from(originalTiers).forEach(tier => {
         const newTier = tier.cloneNode(true);
         // スタイルの再設定（クローンで継承されない場合に備えて）
         newTier.style.display = 'flex';
         newTier.style.marginBottom = '8px';
         newTier.style.border = '1px solid #d1d5db';
+        
+        // ティア内の曲要素コンテナを取得
+        const piecesContainer = newTier.querySelector('div:nth-child(2)');
+        
+        // ティア内の曲が複数行になる場合でも全て表示されるようにスタイルを調整
+        if (piecesContainer) {
+          piecesContainer.style.flexWrap = 'wrap';
+          piecesContainer.style.overflow = 'visible';
+          piecesContainer.style.minHeight = 'auto';
+          piecesContainer.style.maxHeight = 'none';
+          
+          // 各曲要素のスタイルを調整して、曲名が完全に表示されるように
+          const pieceElements = piecesContainer.querySelectorAll('[data-piece-id]');
+          pieceElements.forEach(element => {
+            // 曲名のコンテナを取得
+            const titleElement = element.querySelector('div:nth-child(2)');
+            if (titleElement) {
+              titleElement.style.maxHeight = 'none';
+              titleElement.style.overflow = 'visible';
+              titleElement.style.height = 'auto';
+              titleElement.style.fontSize = '10px';
+              titleElement.style.padding = '2px 0';
+            }
+          });
+        }
         
         // 中身のないティアも含めて全て表示
         newTiersList.appendChild(newTier);
@@ -183,7 +209,7 @@ const BurgmullerTierList = () => {
             useCORS: true,
             logging: false,
             backgroundColor: '#ffffff',
-            // スクロールウィンドウを無限に設定
+            // 重要: スクロールせずに全体が見えるようにする
             windowHeight: 10000,
             // コンテナの実際の高さを使用
             height: container.scrollHeight,
@@ -205,16 +231,16 @@ const BurgmullerTierList = () => {
           if (imgHeight > pageHeight) {
             // 1ページに収まらない場合は、縮小する
             const ratio = pageHeight / imgHeight;
-            imgHeight = pageHeight;
-            const adjustedWidth = imgWidth * ratio;
+            imgHeight = pageHeight * 0.9; // 余白のために90%
+            const adjustedWidth = imgWidth * ratio * 0.9; 
             
             // センタリングのためのオフセット
             const xOffset = (imgWidth - adjustedWidth) / 2;
             
-            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', xOffset, 0, adjustedWidth, imgHeight);
+            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', xOffset, 10, adjustedWidth, imgHeight);
           } else {
             // 1ページに収まる場合はそのまま
-            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
+            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 10, imgWidth, imgHeight);
           }
           
           // PDFダウンロード
@@ -255,7 +281,10 @@ const BurgmullerTierList = () => {
     }
   };
 
-  // 曲の要素を取得する関数（超コンパクト版）
+  // 未分類の曲が0になったかどうかの判定
+  const isUnassignedEmpty = tierAssignments.unassigned.length === 0;
+
+  // 曲の要素を取得する関数（改善版）
   const getPieceElement = (pieceId) => {
     const piece = burgmullerPieces.find(p => p.id === pieceId);
     const basePath = getBasePath();
@@ -268,28 +297,28 @@ const BurgmullerTierList = () => {
         onDragStart={(e) => handleDragStart(e, pieceId)}
         onDragEnd={handleDragEnd}
         style={{
-          padding: '2px',  // さらに縮小: 4px → 2px
-          margin: '1px',   // さらに縮小: 2px → 1px
+          padding: '2px',
+          margin: '1px',
           backgroundColor: 'white',
           border: '1px solid #d1d5db',
-          borderRadius: '3px', // 縮小: 4px → 3px
+          borderRadius: '3px',
           cursor: 'move',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          width: '70px',   // さらに縮小: 90px → 70px
+          width: isUnassignedEmpty ? '85px' : '75px', // 未分類が空の場合は幅を広げる
           boxShadow: '0 1px 1px rgba(0,0,0,0.05)'
         }}
       >
         <div 
           style={{
-            width: '60px',  // さらに縮小: 70px → 60px
-            height: '60px', // さらに縮小: 70px → 60px
+            width: isUnassignedEmpty ? '75px' : '65px', // 未分類が空の場合は幅を広げる
+            height: isUnassignedEmpty ? '75px' : '65px', // 未分類が空の場合は高さを広げる
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            borderRadius: '3px', // 縮小: 4px → 3px
-            marginBottom: '1px', // さらに縮小: 2px → 1px
+            borderRadius: '3px',
+            marginBottom: '1px',
             overflow: 'hidden'
           }}
         >
@@ -309,14 +338,16 @@ const BurgmullerTierList = () => {
           />
         </div>
         <div style={{ 
-          fontSize: '8px', 
+          fontSize: isUnassignedEmpty ? '10px' : '8px', // 未分類が空の場合はフォントサイズを大きく
           textAlign: 'center',
           lineHeight: '1.1',
-          height: '18px', // 固定高さを設定して2行表示できるようにする
+          height: isUnassignedEmpty ? '24px' : '18px', // 未分類が空の場合は高さを広げる
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          overflow: 'hidden'
+          width: '100%',
+          overflow: 'hidden',
+          padding: '0 2px'
         }}>
           {piece.title}
         </div>
@@ -328,68 +359,76 @@ const BurgmullerTierList = () => {
     <div 
       ref={contentRef} 
       style={{ 
-        padding: '4px', // さらに縮小: 8px → 4px
+        padding: '4px',
         maxWidth: '1280px', 
         margin: '0 auto',
-        maxHeight: '100vh', // 画面の高さいっぱいに表示
-        boxSizing: 'border-box' // パディングを含めたサイズ計算
+        maxHeight: '100vh', 
+        boxSizing: 'border-box'
       }}
     >
-      <h1 style={{ 
-        fontSize: '18px', // さらに縮小: 20px → 18px
-        fontWeight: 'bold', 
-        marginBottom: '4px', // さらに縮小: 8px → 4px
-        textAlign: 'center',
-        lineHeight: '1.2' // 行間を詰める
+      {/* ヘッダー部分 - タイトルとボタンを横並びに */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '4px'
       }}>
-        ブルグミュラー25の練習曲 お気に入りランキング
-      </h1>
-      
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        gap: '4px', // さらに縮小: 8px → 4px
-        marginBottom: '4px' // さらに縮小: 8px → 4px
-      }}>
-        <button
-          onClick={handleReset}
-          style={{
-            padding: '4px 8px',  // さらに縮小: 6px 12px → 4px 8px
-            backgroundColor: '#6b7280',
-            color: 'white',
-            borderRadius: '3px', // 縮小: 4px → 3px 
-            cursor: 'pointer',
-            fontSize: '12px' // フォントサイズを小さく
-          }}
-        >
-          リセット
-        </button>
+        <h1 style={{ 
+          fontSize: '18px',
+          fontWeight: 'bold', 
+          margin: '0',
+          lineHeight: '1.2'
+        }}>
+          ブルグミュラー25の練習曲 お気に入りランキング
+        </h1>
         
-        <button
-          onClick={handleDownloadPDF}
-          disabled={isGeneratingPDF}
-          style={{
-            padding: '4px 8px',  // さらに縮小: 6px 12px → 4px 8px
-            backgroundColor: '#3b82f6',
-            color: 'white',
-            borderRadius: '3px', // 縮小: 4px → 3px
-            cursor: isGeneratingPDF ? 'not-allowed' : 'pointer',
-            opacity: isGeneratingPDF ? 0.7 : 1,
-            fontSize: '12px' // フォントサイズを小さく
-          }}
-        >
-          {isGeneratingPDF ? 'PDF生成中...' : 'PDFダウンロード'}
-        </button>
+        <div style={{ 
+          display: 'flex', 
+          gap: '8px',
+        }}>
+          <button
+            onClick={handleReset}
+            style={{
+              padding: '4px 8px',
+              backgroundColor: '#6b7280',
+              color: 'white',
+              borderRadius: '3px',
+              cursor: 'pointer',
+              fontSize: '12px',
+              border: 'none'
+            }}
+          >
+            リセット
+          </button>
+          
+          <button
+            onClick={handleDownloadPDF}
+            disabled={isGeneratingPDF}
+            style={{
+              padding: '4px 8px',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              borderRadius: '3px',
+              cursor: isGeneratingPDF ? 'not-allowed' : 'pointer',
+              opacity: isGeneratingPDF ? 0.7 : 1,
+              fontSize: '12px',
+              border: 'none'
+            }}
+          >
+            {isGeneratingPDF ? 'PDF生成中...' : 'PDFダウンロード'}
+          </button>
+        </div>
       </div>
       
       {/* ティアリスト */}
       <div 
         id="tiers-list" 
         style={{ 
-          marginBottom: '8px', // さらに縮小: 16px → 8px
+          marginBottom: '8px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '2px' // 間隔を詰める
+          gap: '2px',
+          transition: 'all 0.3s ease'
         }}
       >
         {tiers.map(tier => (
@@ -399,19 +438,19 @@ const BurgmullerTierList = () => {
             onDragOver={handleDragOver}
             style={{ 
               display: 'flex', 
-              marginBottom: '2px', // さらに縮小: 4px → 2px
-              border: '1px solid #d1d5db' 
+              marginBottom: '2px',
+              border: '1px solid #d1d5db'
             }}
           >
             <div 
               style={{ 
-                width: '30px',  // さらに縮小: 40px → 30px
+                width: '30px',
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center', 
                 fontWeight: 'bold',
                 backgroundColor: tier.color,
-                fontSize: '16px' // フォントサイズを指定
+                fontSize: '16px'
               }}
             >
               {tier.label}
@@ -419,13 +458,14 @@ const BurgmullerTierList = () => {
             <div 
               style={{ 
                 flex: '1', 
-                minHeight: '66px',  // さらに縮小: 90px → 66px
-                maxHeight: '66px',  // 高さを固定して縦スクロールを防ぐ
-                padding: '2px',     // さらに縮小: 4px → 2px
+                minHeight: isUnassignedEmpty ? '80px' : '66px', // 未分類が空の場合は高さを広げる
+                maxHeight: isUnassignedEmpty ? '80px' : '66px', // 未分類が空の場合は高さを広げる
+                padding: '2px',
                 backgroundColor: '#f3f4f6', 
                 display: 'flex', 
                 flexWrap: 'wrap',
-                overflow: 'auto'    // 多数の曲がある場合は横スクロール可能に
+                overflow: 'auto',
+                transition: 'all 0.3s ease'
               }}
             >
               {tierAssignments[tier.id].map(pieceId => getPieceElement(pieceId))}
@@ -446,27 +486,44 @@ const BurgmullerTierList = () => {
         ))}
       </div>
       
-      {/* 未割り当て曲 */}
-      <div id="unassigned-section" style={{ marginTop: '4px', marginBottom: '4px' }}> {/* さらに縮小: 8px → 4px, 16px → 4px */}
+      {/* 未割り当て曲 - 常に表示するが高さを調整 */}
+      <div 
+        id="unassigned-section" 
+        style={{ 
+          marginTop: '4px', 
+          marginBottom: '4px',
+          transition: 'all 0.3s ease'
+        }}
+      >
         <div style={{ 
           fontWeight: 'bold', 
-          marginBottom: '2px', /* さらに縮小: 4px → 2px */
-          fontSize: '12px' /* フォントサイズを小さく */
+          marginBottom: '2px',
+          fontSize: '12px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}>
-          未分類の曲:
+          <span>未分類の曲:</span>
+          {isUnassignedEmpty && (
+            <span style={{ fontSize: '10px', color: '#6b7280' }}>
+              すべての曲が分類されています
+            </span>
+          )}
         </div>
         <div
           onDrop={(e) => handleDrop(e, 'unassigned')}
           onDragOver={handleDragOver}
           style={{ 
-            padding: '4px',   // さらに縮小: 8px → 4px
+            padding: '4px',
             border: '1px solid #d1d5db', 
             backgroundColor: '#f3f4f6', 
             display: 'flex', 
             flexWrap: 'wrap',
-            gap: '1px', // 項目間の隙間を小さく
-            maxHeight: '80px', // さらに縮小: 240px → 80px
-            overflowY: 'auto'
+            gap: '1px',
+            minHeight: isUnassignedEmpty ? '40px' : '80px', // 未分類が空の場合は高さを小さく
+            maxHeight: isUnassignedEmpty ? '40px' : '80px', // 未分類が空の場合は高さを小さく
+            overflowY: 'auto',
+            transition: 'all 0.3s ease'
           }}
         >
           {tierAssignments.unassigned.map(pieceId => getPieceElement(pieceId))}
@@ -477,22 +534,24 @@ const BurgmullerTierList = () => {
               fontSize: '11px',
               display: 'flex',
               alignItems: 'center',
-              height: '100%'
+              height: '100%',
+              width: '100%',
+              justifyContent: 'center'
             }}>
-              すべての曲が分類されています
+              ここにドラッグして未分類に戻せます
             </span>
           )}
         </div>
       </div>
       
-      {/* クレジット表示をさらにコンパクトに */}
+      {/* クレジット表示 */}
       <div style={{ 
         fontSize: '9px', 
         color: '#9ca3af', 
-        textAlign: 'center',
+        textAlign: 'right',
         marginTop: '2px'
       }}>
-        ブルグミュラー25練習曲ランキング | &copy; {new Date().getFullYear()}
+        作成日: {new Date().toLocaleDateString('ja-JP')}
       </div>
     </div>
   );
