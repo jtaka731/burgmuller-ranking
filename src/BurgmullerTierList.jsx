@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -55,21 +55,54 @@ const BurgmullerTierList = () => {
   const [tierAssignments, setTierAssignments] = useState(initialState);
   const [draggedPiece, setDraggedPiece] = useState(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [dragStartX, setDragStartX] = useState(null); // ドラッグ開始のX座標を記録
+  const [dragDirection, setDragDirection] = useState(null); // ドラッグの方向（左/右）を記録
   
+  // ティア要素への参照を保存
+  const tierRefs = useRef({});
   // contentRef for PDF generation
   const contentRef = useRef(null);
+
+  // スクロール位置を監視して、ドラッグ方向を決定する
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (draggedPiece && dragStartX !== null) {
+        const direction = e.clientX < dragStartX ? 'left' : 'right';
+        setDragDirection(direction);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [draggedPiece, dragStartX]);
   
   // ドラッグ開始時の処理
   const handleDragStart = (e, pieceId) => {
     setDraggedPiece(pieceId);
+    setDragStartX(e.clientX); // ドラッグ開始位置を記録
+    
+    // データ転送オブジェクトの設定
+    e.dataTransfer.setData('text/plain', pieceId);
+    e.dataTransfer.effectAllowed = 'move';
   };
 
   // ドラッグ終了時の処理
   const handleDragEnd = () => {
     setDraggedPiece(null);
+    setDragStartX(null);
+    setDragDirection(null);
   };
 
-  // ドロップ時の処理
+  // ドラッグオーバー時のデフォルト動作を防止
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  // ドロップ時の処理 - 行をまたぐ入れ替えに対応
   const handleDrop = (e, tierId) => {
     e.preventDefault();
     
@@ -88,20 +121,69 @@ const BurgmullerTierList = () => {
       newAssignments[tier] = [...tierAssignments[tier].filter(id => id !== draggedPiece)];
     });
     
-    // 同じティア内で順序変更の場合
-    if (tierId !== 'unassigned' && tierAssignments[tierId].includes(draggedPiece) && dropTargetId && draggedPiece !== dropTargetId) {
-      // 同じティア内での並べ替え
+    // ドラッグ元のティアを特定
+    let dragSourceTier = Object.keys(tierAssignments).find(tier => 
+      tierAssignments[tier].includes(draggedPiece)
+    );
+    
+    // 同じティア内での移動かどうか
+    if (tierId === dragSourceTier && dropTargetId && tierAssignments[tierId].includes(dropTargetId)) {
       const tierItems = [...newAssignments[tierId]];
-      const dropTargetIndex = tierItems.indexOf(dropTargetId);
+      const dropTargetIndex = tierAssignments[tierId].indexOf(dropTargetId);
       
-      if (dropTargetIndex !== -1) {
-        // ドロップターゲットの位置に挿入
-        tierItems.splice(dropTargetIndex, 0, draggedPiece);
-        newAssignments[tierId] = tierItems;
+      // 行またぎの位置調整ロジック
+      if (dragDirection) {
+        const containerRect = tierRefs.current[tierId].getBoundingClientRect();
+        const pieceWidth = dropTarget.offsetWidth;
+        const rowCapacity = Math.floor(containerRect.width / pieceWidth);
+        
+        // ドロップ位置（左/右端）の特別処理
+        const isAtRowEdge = (index, direction) => {
+          if (direction === 'left') {
+            return index % rowCapacity === 0; // 左端
+          } else {
+            return (index + 1) % rowCapacity === 0 || index === tierItems.length - 1; // 右端
+          }
+        };
+        
+        // ドラッグ元の位置
+        const draggedIndex = tierAssignments[tierId].indexOf(draggedPiece);
+        
+        // 行をまたぐ移動の特別処理
+        if (isAtRowEdge(dropTargetIndex, dragDirection) && 
+            Math.floor(draggedIndex / rowCapacity) !== Math.floor(dropTargetIndex / rowCapacity)) {
+          
+          // 左方向へのドラッグの場合、前の行の最後に配置
+          if (dragDirection === 'left' && dropTargetIndex % rowCapacity === 0 && dropTargetIndex > 0) {
+            const targetPosition = dropTargetIndex - 1;
+            tierItems.splice(targetPosition, 0, draggedPiece);
+          } 
+          // 右方向へのドラッグの場合、次の行の最初に配置
+          else if (dragDirection === 'right' && 
+                 ((dropTargetIndex + 1) % rowCapacity === 0 || dropTargetIndex === tierItems.length - 1)) {
+            const targetPosition = dropTargetIndex + 1;
+            if (targetPosition <= tierItems.length) {
+              tierItems.splice(targetPosition, 0, draggedPiece);
+            } else {
+              tierItems.push(draggedPiece);
+            }
+          } else {
+            // 通常のドロップ位置
+            tierItems.splice(dropTargetIndex, 0, draggedPiece);
+          }
+        } else {
+          // 通常のドロップ位置
+          tierItems.splice(dropTargetIndex, 0, draggedPiece);
+        }
       } else {
-        // ターゲットが見つからない場合は末尾に追加
-        newAssignments[tierId].push(draggedPiece);
+        // 方向が特定できない場合は通常のドロップ
+        tierItems.splice(dropTargetIndex, 0, draggedPiece);
       }
+      
+      newAssignments[tierId] = tierItems;
+    } else if (tierId !== 'unassigned' && dragSourceTier === tierId) {
+      // 同じティア内で、特定のターゲットなしにドロップした場合は末尾に追加
+      newAssignments[tierId].push(draggedPiece);
     } else {
       // 別のティアへの移動、または未分類への移動
       newAssignments[tierId].push(draggedPiece);
@@ -110,11 +192,6 @@ const BurgmullerTierList = () => {
     // ステートを更新
     setTierAssignments(newAssignments);
   };
-  
-  // ドラッグオーバー時のデフォルト動作を防止
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
 
   // リセットボタンのハンドラ
   const handleReset = () => {
@@ -122,6 +199,8 @@ const BurgmullerTierList = () => {
     // 完全に新しいオブジェクトで初期化
     setTierAssignments({...initialState});
     setDraggedPiece(null);
+    setDragStartX(null);
+    setDragDirection(null);
   };
 
   // 改善版PDFダウンロードハンドラ - 全ての行が見えるようにする
@@ -456,6 +535,7 @@ const BurgmullerTierList = () => {
               {tier.label}
             </div>
             <div 
+              ref={el => tierRefs.current[tier.id] = el} // ティア要素への参照を保存
               style={{ 
                 flex: '1', 
                 minHeight: isUnassignedEmpty ? '80px' : '66px', // 未分類が空の場合は高さを広げる
@@ -511,6 +591,7 @@ const BurgmullerTierList = () => {
           )}
         </div>
         <div
+          ref={el => tierRefs.current['unassigned'] = el} // 未分類エリアへの参照を保存
           onDrop={(e) => handleDrop(e, 'unassigned')}
           onDragOver={handleDragOver}
           style={{ 
