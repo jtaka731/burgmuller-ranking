@@ -51,6 +51,12 @@ const BurgmullerTierList = () => {
     unassigned: [...burgmullerPieces.map(piece => piece.id)]
   };
 
+  // フォーム用のステート変数
+  const [userName, setUserName] = useState('');
+  const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitResult, setSubmitResult] = useState(null);
+
   // ドラッグ＆ドロップの状態
   const [tierAssignments, setTierAssignments] = useState(initialState);
   const [draggedPiece, setDraggedPiece] = useState(null);
@@ -231,6 +237,75 @@ const BurgmullerTierList = () => {
     setDragDirection(null);
   };
 
+  // 送信ハンドラー関数
+  const submitRanking = async (e) => {
+    e.preventDefault();
+    
+    // 送信中フラグを立てる
+    setIsSubmitting(true);
+    setSubmitResult(null);
+    
+    try {
+      // ランキング結果を整形
+      const results = {};
+      
+      // ティアごとに曲を取得
+      tiers.forEach(tier => {
+        const pieces = tierAssignments[tier.id].map(id => {
+          const piece = burgmullerPieces.find(p => p.id === id);
+          return piece.title;
+        });
+        results[tier.label] = pieces;
+      });
+      
+      // 未分類の曲も含める
+      const unassignedPieces = tierAssignments.unassigned.map(id => {
+        const piece = burgmullerPieces.find(p => p.id === id);
+        return piece.title;
+      });
+      results['未ランク'] = unassignedPieces;
+      
+      // Google Apps Script または他のAPIエンドポイントにPOSTリクエスト
+      const formData = {
+        userName: userName,
+        comment: comment,
+        rankings: results,
+        timestamp: new Date().toISOString()
+      };
+      
+      // デモ用: 実際のAPIエンドポイントを設定していない場合はコメントアウト
+      /*
+      const response = await fetch('https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+        mode: 'no-cors' // CORS対策
+      });
+      */
+      
+      // デモ用: 送信成功をシミュレート
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // 送信結果をセット
+      setSubmitResult({
+        success: true,
+        message: 'ランキングを送信しました。ありがとうございます！（デモ）'
+      });
+      
+      console.log('送信されたランキング結果:', formData);
+    } catch (error) {
+      console.error('送信エラー:', error);
+      setSubmitResult({
+        success: false,
+        message: 'エラーが発生しました。再度お試しください。'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // 改善版PDFダウンロードハンドラ - 全ての行が見えるようにする
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
@@ -249,6 +324,32 @@ const BurgmullerTierList = () => {
       title.style.marginBottom = '20px';
       title.style.fontSize = '24px';
       container.appendChild(title);
+      
+      // ユーザー情報セクションを追加
+      if (userName) {
+        const userInfo = document.createElement('div');
+        userInfo.style.marginBottom = '20px';
+        userInfo.style.padding = '10px';
+        userInfo.style.border = '1px solid #d1d5db';
+        userInfo.style.borderRadius = '4px';
+        userInfo.style.backgroundColor = '#f9fafb';
+        
+        const nameElement = document.createElement('p');
+        nameElement.style.margin = '0 0 5px 0';
+        nameElement.style.fontWeight = 'bold';
+        nameElement.textContent = `お名前: ${userName}`;
+        userInfo.appendChild(nameElement);
+        
+        if (comment) {
+          const commentElement = document.createElement('p');
+          commentElement.style.margin = '0';
+          commentElement.style.whiteSpace = 'pre-wrap';
+          commentElement.textContent = `コメント: ${comment}`;
+          userInfo.appendChild(commentElement);
+        }
+        
+        container.appendChild(userInfo);
+      }
       
       // ティアリストを新たに構築
       const newTiersList = document.createElement('div');
@@ -599,6 +700,36 @@ return (
         gap: getSizeBasedStyle(4, 6, 8), // ギャップを小さく
         transition: 'all 0.3s ease'
       }}>
+        {/* 名前とコメント入力フォーム（ボタンの横） */}
+        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="お名前"
+            value={userName}
+            onChange={(e) => setUserName(e.target.value)}
+            style={{
+              padding: getSizeBasedStyle('1px 3px', '2px 4px', '3px 6px'),
+              fontSize: getSizeBasedStyle(10, 11, 12),
+              border: '1px solid #d1d5db',
+              borderRadius: '2px',
+              width: getSizeBasedStyle(100, 120, 150)
+            }}
+          />
+          <input
+            type="text"
+            placeholder="コメント"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            style={{
+              padding: getSizeBasedStyle('1px 3px', '2px 4px', '3px 6px'),
+              fontSize: getSizeBasedStyle(10, 11, 12),
+              border: '1px solid #d1d5db',
+              borderRadius: '2px',
+              width: getSizeBasedStyle(150, 180, 220)
+            }}
+          />
+        </div>
+        
         <button
           onClick={handleReset}
           style={{
@@ -634,6 +765,20 @@ return (
         </button>
       </div>
     </div>
+    
+    {/* 送信結果メッセージ（設定されている場合のみ表示） */}
+    {submitResult && (
+      <div style={{ 
+        padding: '8px 12px', 
+        marginBottom: '8px', 
+        borderRadius: '4px',
+        backgroundColor: submitResult.success ? '#dcfce7' : '#fee2e2',
+        color: submitResult.success ? '#166534' : '#991b1b',
+        fontSize: getSizeBasedStyle(11, 12, 13)
+      }}>
+        {submitResult.message}
+      </div>
+    )}
     
     {/* ティアリスト */}
     <div 
@@ -768,6 +913,31 @@ return (
           </span>
         )}
       </div>
+    </div>
+    
+    {/* ランキング送信ボタン */}
+    <div style={{ 
+      marginTop: '8px',
+      marginBottom: '8px',
+      display: 'flex',
+      justifyContent: 'flex-end'
+    }}>
+      <button
+        onClick={submitRanking}
+        disabled={isSubmitting}
+        style={{ 
+          padding: getSizeBasedStyle('2px 4px', '3px 6px', '4px 8px'),
+          backgroundColor: '#10b981', // グリーン
+          color: 'white', 
+          borderRadius: '2px',
+          cursor: isSubmitting ? 'not-allowed' : 'pointer',
+          opacity: isSubmitting ? 0.5 : 1,
+          fontSize: getSizeBasedStyle(10, 11, 12),
+          border: 'none'
+        }}
+      >
+        {isSubmitting ? '送信中...' : 'ランキングを送信する'}
+      </button>
     </div>
     
     {/* クレジット表示 */}
